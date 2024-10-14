@@ -1,5 +1,6 @@
 package com.proyecto.mangareader.app.controller;
 
+import com.proyecto.mangareader.app.dto.in.RolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.service.IRolesService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +31,9 @@ public class RolesController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
-    public ResponseEntity getAll(@RequestParam(required = false) Long id) {
-        List<RolesEntity> roles = rolesService.getAllRoles(id);
-        if(roles.isEmpty() || (id != null && roles.get(0) == null)) {
+    public ResponseEntity getAll(@RequestParam(required = false) String role) {
+        List<RolesEntity> roles = rolesService.getAllRoles(role);
+        if(roles.isEmpty() || (role != null && roles.get(0) == null)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(roles, HttpStatus.OK);
@@ -46,9 +47,33 @@ public class RolesController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity save(RolesEntity role) {
-        RolesEntity savedRole = rolesService.saveRole(role);
-        return new ResponseEntity<>(savedRole, HttpStatus.CREATED);
+    public ResponseEntity save(RolesDTO roleDTO) {
+        try {
+            RolesEntity role = new RolesEntity();
+            role.setRol(roleDTO.getRole());
+            RolesEntity savedRole = rolesService.saveRole(role);
+            return new ResponseEntity<>(savedRole, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al crar el rol", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "Obtenido un rol por ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rol eliminado exitosamente",
+                content = @Content(schema = @Schema(implementation = RolesEntity.class))),
+            @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity getById(@PathVariable Long id) {
+        try {
+            return new ResponseEntity<>(rolesService.getById(id), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @Operation(summary = "Eliminar un rol por ID")
@@ -57,14 +82,33 @@ public class RolesController {
             @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe"),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    @DeleteMapping
-    public ResponseEntity<String> delete(@RequestParam Long id) {
-        List<RolesEntity> roles = rolesService.getAllRoles(id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        RolesEntity roles = rolesService.getById(id);
         String result = rolesService.deleteRole(id);
-        if(roles.isEmpty() || (id != null && roles.get(0) == null)) {
+        if(id != null) {
             return new ResponseEntity<>("Id no disponible", HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 
+    @Operation(summary = "Actualizar un rol")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rol actualizado exitosamente",
+                    content = @Content(schema = @Schema(implementation = RolesEntity.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de rol inválidos"),
+            @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity update(@PathVariable Long id, @RequestBody RolesDTO updatedRole) {
+        try {
+            RolesEntity role = rolesService.updateRole(id, updatedRole);
+            return new ResponseEntity<>(role, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al actualizar el rol.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
