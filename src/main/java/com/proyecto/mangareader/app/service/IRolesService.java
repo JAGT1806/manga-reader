@@ -1,6 +1,6 @@
 package com.proyecto.mangareader.app.service;
 
-import com.proyecto.mangareader.app.dto.in.RolesDTO;
+import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 
 import java.util.List;
@@ -12,7 +12,8 @@ public interface IRolesService {
 
     public String deleteRole(Long id);
 
-    public RolesEntity updateRole(Long id, RolesDTO updatedRole);
+    public RolesEntity updateRole(Long id, InRolesDTO updatedRole);
 
     public RolesEntity getById(Long id);
+
 }

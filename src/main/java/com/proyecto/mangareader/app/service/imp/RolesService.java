@@ -1,13 +1,12 @@
 package com.proyecto.mangareader.app.service.imp;
 
-import com.proyecto.mangareader.app.dto.in.RolesDTO;
+import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.repository.RolesRepository;
 import com.proyecto.mangareader.app.service.IRolesService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,7 +41,8 @@ public class RolesService implements IRolesService {
 
     @Override
     public String deleteRole(Long id) {
-        if(id != null || rolesRepository.existsById(id)) {
+        RolesEntity role = rolesRepository.findById(id).orElse(null);
+        if(role != null || rolesRepository.existsById(id)) {
             rolesRepository.deleteById(id);
             return "Role deleted";
         } else {
@@ -51,7 +51,7 @@ public class RolesService implements IRolesService {
     }
 
     @Override
-    public RolesEntity updateRole(Long id, RolesDTO updatedRole) {
+    public RolesEntity updateRole(Long id, InRolesDTO updatedRole) {
         if (id == null || updatedRole == null) {
             throw new IllegalArgumentException("El ID del rol o los datos actualizados no pueden ser nulos.");
         }

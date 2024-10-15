@@ -1,6 +1,6 @@
 package com.proyecto.mangareader.app.controller;
 
-import com.proyecto.mangareader.app.dto.in.RolesDTO;
+import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.service.IRolesService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class RolesController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
-    public ResponseEntity save(RolesDTO roleDTO) {
+    public ResponseEntity save(InRolesDTO roleDTO) {
         try {
             RolesEntity role = new RolesEntity();
             role.setRol(roleDTO.getRole());
@@ -60,9 +60,9 @@ public class RolesController {
         }
     }
 
-    @Operation(summary = "Obtenido un rol por ID")
+    @Operation(summary = "Obtener un rol por ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Rol eliminado exitosamente",
+            @ApiResponse(responseCode = "200", description = "Rol encontrado exitosamente",
                 content = @Content(schema = @Schema(implementation = RolesEntity.class))),
             @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe"),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
@@ -84,12 +84,11 @@ public class RolesController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
-        RolesEntity roles = rolesService.getById(id);
         String result = rolesService.deleteRole(id);
         if(id != null) {
-            return new ResponseEntity<>("Id no disponible", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(result, HttpStatus.OK);
         }
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>("Id no disponible", HttpStatus.NOT_FOUND);
     }
 
     @Operation(summary = "Actualizar un rol")
@@ -101,7 +100,7 @@ public class RolesController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
-    public ResponseEntity update(@PathVariable Long id, @RequestBody RolesDTO updatedRole) {
+    public ResponseEntity update(@PathVariable Long id, @RequestBody InRolesDTO updatedRole) {
         try {
             RolesEntity role = rolesService.updateRole(id, updatedRole);
             return new ResponseEntity<>(role, HttpStatus.OK);
