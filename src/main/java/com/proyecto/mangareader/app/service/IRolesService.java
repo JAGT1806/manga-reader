@@ -2,6 +2,7 @@ package com.proyecto.mangareader.app.service;
 
 import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
+import com.proyecto.mangareader.app.responses.OkResponse;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface IRolesService {
 
     public RolesEntity saveRole(RolesEntity role);
 
-    public String deleteRole(Long id);
+    public OkResponse deleteRole(Long id);
 
     public RolesEntity updateRole(Long id, InRolesDTO updatedRole);
 

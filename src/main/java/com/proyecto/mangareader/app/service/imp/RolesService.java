@@ -2,7 +2,9 @@ package com.proyecto.mangareader.app.service.imp;
 
 import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
+import com.proyecto.mangareader.app.exceptions.RoleNotFoundException;
 import com.proyecto.mangareader.app.repository.RolesRepository;
+import com.proyecto.mangareader.app.responses.OkResponse;
 import com.proyecto.mangareader.app.service.IRolesService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ public class RolesService implements IRolesService {
     @Override
     public List<RolesEntity> getAllRoles(String role) {
         if(role != null) {
-            return rolesRepository.findByRolContaining(role).orElse(null);
+            return rolesRepository.findByRolContaining(role).orElseThrow();
         }
         return rolesRepository.findAll();
     }
@@ -40,14 +42,13 @@ public class RolesService implements IRolesService {
     }
 
     @Override
-    public String deleteRole(Long id) {
+    public OkResponse deleteRole(Long id) {
         RolesEntity role = rolesRepository.findById(id).orElse(null);
-        if(role != null || rolesRepository.existsById(id)) {
-            rolesRepository.deleteById(id);
-            return "Role deleted";
-        } else {
-            return "Role with " + id + " not found";
+        if(role == null || role.getRol() == null || role.getRol().isEmpty()) {
+            throw new RoleNotFoundException("Id no encontrado");
         }
+        rolesRepository.deleteById(id);
+        return new OkResponse();
     }
 
     @Override
@@ -56,7 +57,11 @@ public class RolesService implements IRolesService {
             throw new IllegalArgumentException("El ID del rol o los datos actualizados no pueden ser nulos.");
         }
         if (!rolesRepository.existsById(id)) {
-            throw new IllegalArgumentException("El rol con ID " + id + " no existe.");
+            throw new RoleNotFoundException("El rol con ID " + id + " no existe.");
+        }
+
+        if (updatedRole.getRole() == null || updatedRole.getRole().isEmpty()) {
+            throw new IllegalArgumentException("El campo de Rol no debe ser nulo.");
         }
 
         RolesEntity existingRole = rolesRepository.findById(id).orElse(null);
