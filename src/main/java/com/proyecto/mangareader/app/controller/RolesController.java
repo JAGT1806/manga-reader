@@ -3,8 +3,8 @@ package com.proyecto.mangareader.app.controller;
 import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.exceptions.RoleNotFoundException;
-import com.proyecto.mangareader.app.responses.ErrorResponse;
-import com.proyecto.mangareader.app.responses.OkResponse;
+import com.proyecto.mangareader.app.responses.error.ErrorResponse;
+import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.service.IRolesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,7 +27,7 @@ import java.util.List;
 public class RolesController {
     private final IRolesService rolesService;
 
-    @Operation(summary = "Obtener roles", description = "Obtiene todos los roles o un rol específico por ID")
+    @Operation(summary = "Obtener roles", description = "Obtiene todos los roles")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Roles encontrados exitosamente",
                     content=@Content(schema = @Schema(implementation = RolesEntity.class))),

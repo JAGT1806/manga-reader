@@ -1,8 +1,8 @@
 package com.proyecto.mangareader.app.exceptions;
 
-import com.proyecto.mangareader.app.responses.ErrorResponse;
-import com.proyecto.mangareader.app.responses.RoleResponse;
-import com.proyecto.mangareader.app.responses.UserResponse;
+import com.proyecto.mangareader.app.responses.error.ErrorResponse;
+import com.proyecto.mangareader.app.responses.role.RoleResponse;
+import com.proyecto.mangareader.app.responses.user.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     // Maneja la excepción para el endpoint (/api/user/)
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<UserResponse> handleUserNotFoundException(UserNotFoundException ex) {
-        UserResponse response = new UserResponse(null, null, null, null, ex.getMessage());
+        UserResponse response = new UserResponse();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 

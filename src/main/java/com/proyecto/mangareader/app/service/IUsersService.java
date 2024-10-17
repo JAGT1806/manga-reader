@@ -1,19 +1,21 @@
 package com.proyecto.mangareader.app.service;
 
 import com.proyecto.mangareader.app.dto.in.InUsersDTO;
-import com.proyecto.mangareader.app.dto.out.OutUsersDTO;
-import com.proyecto.mangareader.app.entity.UsersEntity;
+
+import com.proyecto.mangareader.app.responses.ok.OkResponse;
+import com.proyecto.mangareader.app.responses.user.UserListResponse;
+import com.proyecto.mangareader.app.responses.user.UserResponse;
 
 import java.util.List;
 
 public interface IUsersService {
-    public List<OutUsersDTO> getAllUsers(String username, String email, String role);
+    public UserListResponse getAllUsers(String username, String email, String role, int offset, int limit);
 
-    public OutUsersDTO getUserById(Long idUser);
+    public UserResponse getUserById(Long idUser);
 
-    public OutUsersDTO saveUser(InUsersDTO inUsersDTO);
+    public UserResponse saveUser(InUsersDTO inUsersDTO);
 
-    public String deleteUser(Long id);
+    public OkResponse deleteUser(Long id);
 
-    public OutUsersDTO updateUser(Long id, InUsersDTO inUsersDTO);
+    public UserResponse updateUser(Long id, InUsersDTO inUsersDTO);
 }

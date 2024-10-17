@@ -1,4 +1,4 @@
-package com.proyecto.mangareader.app.responses;
+package com.proyecto.mangareader.app.responses.role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

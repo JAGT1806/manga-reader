@@ -5,6 +5,7 @@ import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
@@ -15,6 +16,15 @@ public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
         "(:role IS NULL OR u.rol.rol LIKE %:role%)")
     List<UsersEntity> findByFilters(@Param("username") String username,
                                     @Param("email") String email,
-                                    @Param("role") String role);
+                                    @Param("role") String role,
+                                    Pageable pageable);
+
+    @Query("SELECT COUNT(u) FROM UsersEntity u WHERE " +
+            "(:username IS NULL OR u.username LIKE %:username%) AND " +
+            "(:email IS NULL OR u.email LIKE %:email%) AND " +
+            "(:role IS NULL OR u.rol.rol LIKE %:role%)")
+    Long countByFilters(@Param("username") String username,
+                        @Param("email") String email,
+                        @Param("role") String role);
 
 }

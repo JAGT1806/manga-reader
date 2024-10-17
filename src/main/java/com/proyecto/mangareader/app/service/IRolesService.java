@@ -2,7 +2,7 @@ package com.proyecto.mangareader.app.service;
 
 import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
-import com.proyecto.mangareader.app.responses.OkResponse;
+import com.proyecto.mangareader.app.responses.ok.OkResponse;
 
 import java.util.List;
 

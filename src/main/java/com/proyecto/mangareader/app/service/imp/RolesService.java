@@ -4,7 +4,7 @@ import com.proyecto.mangareader.app.dto.in.InRolesDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.exceptions.RoleNotFoundException;
 import com.proyecto.mangareader.app.repository.RolesRepository;
-import com.proyecto.mangareader.app.responses.OkResponse;
+import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.service.IRolesService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
