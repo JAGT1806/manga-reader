@@ -6,8 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.domain.Pageable;
-import java.util.List;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
+@Repository
 public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
 
     @Query("SELECT u FROM UsersEntity u WHERE " +
@@ -27,4 +31,6 @@ public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
                         @Param("email") String email,
                         @Param("role") String role);
 
+
+    Optional<UsersEntity> findByEmail(String email);
 }

@@ -1,8 +1,6 @@
 package com.proyecto.mangareader.app.controller;
 
 import com.proyecto.mangareader.app.dto.in.InUsersDTO;
-import com.proyecto.mangareader.app.dto.out.OutUsersDTO;
-import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.exceptions.UserNotFoundException;
 import com.proyecto.mangareader.app.responses.error.ErrorResponse;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
@@ -18,13 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -158,6 +154,10 @@ public class UsersController {
         }
     }
 
+    @GetMapping("/login")
+    public ResponseEntity<String> loginUser(String email,String password) {
+        String login = usersService.loginUser(email, password);
 
-
+        return new ResponseEntity<>(login, HttpStatus.OK);
+    }
 }

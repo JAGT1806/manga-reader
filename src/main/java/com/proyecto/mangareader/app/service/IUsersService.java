@@ -6,16 +6,17 @@ import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.responses.user.UserListResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
 
-import java.util.List;
 
 public interface IUsersService {
-    public UserListResponse getAllUsers(String username, String email, String role, int offset, int limit);
+     UserListResponse getAllUsers(String username, String email, String role, int offset, int limit);
 
-    public UserResponse getUserById(Long idUser);
+     UserResponse getUserById(Long idUser);
 
-    public UserResponse saveUser(InUsersDTO inUsersDTO);
+     UserResponse saveUser(InUsersDTO inUsersDTO);
 
-    public OkResponse deleteUser(Long id);
+     OkResponse deleteUser(Long id);
 
-    public UserResponse updateUser(Long id, InUsersDTO inUsersDTO);
+     UserResponse updateUser(Long id, InUsersDTO inUsersDTO);
+
+     String loginUser(String email, String password);
 }
