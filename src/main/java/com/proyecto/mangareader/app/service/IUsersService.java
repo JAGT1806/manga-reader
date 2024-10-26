@@ -17,6 +17,4 @@ public interface IUsersService {
      OkResponse deleteUser(Long id);
 
      UserResponse updateUser(Long id, InUsersDTO inUsersDTO);
-
-     String loginUser(String email, String password);
 }

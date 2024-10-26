@@ -19,18 +19,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class UsersService implements IUsersService {
-    private static final Logger log = LoggerFactory.getLogger(UsersService.class);
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
@@ -96,19 +98,6 @@ public class UsersService implements IUsersService {
     }
 
     @Override
-    public String loginUser(String email, String password) {
-        UsersEntity user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            return jwtTokenProvider.generateToken(authentication);
-        } else {
-            throw new BadCredentialsException("Invalid password");
-        }
-    }
-
-    @Override
     public OkResponse deleteUser(Long id) {
         UsersEntity user = usersRepository.findById(id).orElse(null);
         if(user != null || usersRepository.existsById(id)) {
@@ -146,7 +135,7 @@ public class UsersService implements IUsersService {
         }
     }
 
-    public OutUsersDTO setUserDTO(@org.jetbrains.annotations.NotNull UsersEntity user) {
+    private OutUsersDTO setUserDTO(@org.jetbrains.annotations.NotNull UsersEntity user) {
         OutUsersDTO outUsersDTO = new OutUsersDTO();
         outUsersDTO.setIdUser(user.getIdUser());
         outUsersDTO.setUsername(user.getUsername());
@@ -162,4 +151,5 @@ public class UsersService implements IUsersService {
 
         return outUsersDTO;
     }
+
 }

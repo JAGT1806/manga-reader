@@ -4,13 +4,19 @@ Este proyecto implementa una arquitectura monolítica para un sistema de lectura
 
 ## Estructura del Proyecto
 
-El proyecto está compuesto por los siguientes paquetes:
+Anteriormente dicho, este proyecto cuenta con un sistema de ficheros monolito, si estructura es la siguiente:
+```
+- com.proyecto.mangareader.app
+
+
+```
+
 
 ## Requisitos Previos
 
 - Java 21
 - Maven
-- PostgreSQL
+- PostgreSQL 17
 
 ## Puertos del proyecto
 
@@ -20,16 +26,23 @@ El proyecto está compuesto por los siguientes paquetes:
 ## Dependencias del proyecto
 
 Estas dependencias se pueden encontrar en el `pom.xml`.
+- **Spring JPA:** Java Persistent Api, una dependencia que nos permite hacer la manipulación de la base de datos y que estos persistan dentro de esta.
+- **Lombok:** Dependencia que permite la reducción significativa de código, permitiendo la creación de los constructores, getters, setters, entre otros.
+- **PostgreSQL Driver:**  Controlador que permite la conexión con la base de datos.
+* **Spring Docs:** Dependencia para la documentación del backend.
+* **OpenFeign:** Permite la realización a petición de un endpoint y/o una API externa.
+* **Spring Security:** Se encarga de la seguridad del backend.
+
 ## Configuración de la base de datos
 
 Tras levantar la base de datos por medio del proyecto, se harán unas configuraciones a ciertas tablas para evitar la generación de datos duplicados, también se generará una tabla de auditoria que almacenará las modificaciones de los datos dentro de las tablas, tener en cuenta que esta tabla de monitoria no hará parte de la conexión del proyecto con la base de datos, sino, más bien, esto ayudará a conocer las modificaciones hechas a la base de datos.
 
 Las entidades que se manejarán son:
-- favorites
-- img
-- img_users
-- roles
-- users
+- **favorites** : Se almacenarán los mangas favoritos del usuario
+- **img**: Almacena las imágenes que se pueden colocar los usuarios.
+- **img_users** : Almacena la imagen que tienen los usuarios
+- **roles** : Almacena los roles
+- **users** : Almacena la información de los usuarios.
 
 Ahora vamos a hacer algunas restricciones a dos entidades, esto lo hacemos ya dentro de la misma base de datos:
 ``` sql
@@ -47,84 +60,118 @@ Esto hará que no se generen valores duplicados en estas tablas.
 ### Tabla de auditorias
 Se generó la tabla de auditoria, se hizo una en general para todas las tablas, cómo no se están haciendo por el momento validaciones de usuarios, se puso el valor del usuario como algo null por el momento, posteriormente se modificará.
 
+Tener en cuenta que en el paquete de `entities` se encuentran todas las entidades y en el paquete de `audit` se encontrará todo con respecto a la auditoría. Posteriormente al levantar el proyecto, se inserta el siguiente query en la base de datos:
+
 ``` SQL
--- Primero, creamos una tabla de auditoría general
-CREATE TABLE audit_log (
-    id SERIAL PRIMARY KEY,
-    table_name VARCHAR(50) NOT NULL,
-    action VARCHAR(10) NOT NULL,
-    user_id BIGINT,
-    old_data JSONB,
-    new_data JSONB,
-    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Función para manejar las auditorías 
+CREATE OR REPLACE FUNCTION audit_trigger_function() 
+RETURNS TRIGGER AS $$ 
+DECLARE 
+	old_data JSON; 
+	new_data JSON; 
+	current_user_id BIGINT; 
+	current_username VARCHAR; 
+BEGIN 
+	-- Intentar obtener el usuario actual del contexto de la aplicación 
+	-- Si no existe, asignar valores por defecto para sistema 
+	BEGIN 
+		current_user_id := current_setting('app.current_user_id')::BIGINT; 
+		current_username := current_setting('app.current_username')::VARCHAR; 
+	EXCEPTION WHEN OTHERS THEN 
+		current_user_id := 0; 
+		current_username := 'SYSTEM'; 
+	END; 
+	
+	IF (TG_OP = 'DELETE') THEN 
+		old_data := row_to_json(OLD); 
+		new_data := NULL; 
+	ELSIF (TG_OP = 'UPDATE') THEN 
+		old_data := row_to_json(OLD); 
+		new_data := row_to_json(NEW); 
+	ELSIF (TG_OP = 'INSERT') THEN 
+		old_data := NULL; 
+		new_data := row_to_json(NEW); 
+	END IF; 
+	
+	INSERT INTO audits ( 
+		action, 
+		table_name, 
+		old_data, 
+		new_data, 
+		timestamp, 
+		user_id, 
+		username 
+	) VALUES ( 
+		TG_OP, 
+		TG_TABLE_NAME, 
+		old_data, 
+		new_data, 
+		CURRENT_TIMESTAMP, 
+		current_user_id, 
+		current_username 
+	); 
+	RETURN NEW; 
+END; 
+$$ LANGUAGE plpgsql; 
 
--- Función para manejar las auditorías sin user_id
-CREATE OR REPLACE FUNCTION audit_trigger_func()
-RETURNS TRIGGER AS $$
-DECLARE
-    old_row JSONB;
-    new_row JSONB;
-    audit_user_id BIGINT;
-BEGIN
-    IF TG_TABLE_NAME = 'roles' THEN
-        audit_user_id = NULL;
-    ELSIF TG_OP = 'DELETE' THEN
-        audit_user_id = OLD.user_id;
-    ELSE
-        audit_user_id = NEW.user_id;
-    END IF;
 
-    IF (TG_OP = 'DELETE') THEN
-        old_row = row_to_json(OLD)::JSONB;
-        INSERT INTO audit_log (table_name, action, old_data, user_id)
-        VALUES (TG_TABLE_NAME::TEXT, 'DELETE', old_row, audit_user_id);
-        RETURN OLD;
-    ELSIF (TG_OP = 'UPDATE') THEN
-        old_row = row_to_json(OLD)::JSONB;
-        new_row = row_to_json(NEW)::JSONB;
-        INSERT INTO audit_log (table_name, action, old_data, new_data, user_id)
-        VALUES (TG_TABLE_NAME::TEXT, 'UPDATE', old_row, new_row, audit_user_id);
-        RETURN NEW;
-    ELSIF (TG_OP = 'INSERT') THEN
-        new_row = row_to_json(NEW)::JSONB;
-        INSERT INTO audit_log (table_name, action, new_data, user_id)
-        VALUES (TG_TABLE_NAME::TEXT, 'INSERT', new_row, audit_user_id);
-        RETURN NEW;
-    END IF;
-    RETURN NULL;
-END;
+-- Crear triggers para cada tabla que queremos auditar 
+CREATE TRIGGER users_audit_trigger 
+AFTER INSERT OR UPDATE OR DELETE ON users 
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
+
+CREATE TRIGGER favorites_audit_trigger 
+AFTER INSERT OR UPDATE OR DELETE ON favorites 
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
+
+CREATE TRIGGER img_audit_trigger 
+AFTER INSERT OR UPDATE OR DELETE ON img 
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
+
+CREATE TRIGGER img_users_audit_trigger 
+AFTER INSERT OR UPDATE OR DELETE ON img_users 
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
+
+-- Inserción inicial de roles y usuario admin 
+INSERT INTO roles (rol) VALUES ('ROLE_ADMIN'), ('ROLE_USER') 
+ON CONFLICT (rol) DO NOTHING; 
+
+-- Crear usuario admin inicial 
+-- La contraseña deberá ser hasheada antes de insertar 
+INSERT INTO users ( 
+	username, 
+	email, 
+	password, 
+	date_create, 
+	date_update, 
+	rol_id 
+) 
+SELECT 
+	'admin', 
+	'admin@mangareader.com', 
+	-- Asegúrate de cambiar esto por la contraseña hasheada real
+	'$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 
+	-- En este caso se usará 'admin123'
+	-- $2a$10$st4YvGfdaVAhnExpAeWH6eSZP.cqHoWu8GCFP9GlRiD6IpwNWFcTO
+	-- Puede cambiar luego esta contraseña.
+	CURRENT_TIMESTAMP, 
+	CURRENT_TIMESTAMP, 
+	r.id_rol 
+FROM roles r 
+WHERE r.rol = 'ROLE_ADMIN' 
+ON CONFLICT (email) DO NOTHING; 
+
+-- Función para establecer el usuario actual 
+CREATE OR REPLACE FUNCTION set_current_user(p_user_id BIGINT, p_username VARCHAR)
+RETURNS VOID AS $$ 
+BEGIN 
+	PERFORM set_config('app.current_user_id', p_user_id::TEXT, false); 
+	PERFORM set_config('app.current_username', p_username, false); 
+END; 
 $$ LANGUAGE plpgsql;
-
-
--- Creamos triggers para las tablas principales
-
--- Para la tabla users
-CREATE TRIGGER users_audit_trigger
-AFTER INSERT OR UPDATE OR DELETE ON users
-FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-
--- Para la tabla favorites
-CREATE TRIGGER favorites_audit_trigger
-AFTER INSERT OR UPDATE OR DELETE ON favorites
-FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-
--- Para la tabla img
-CREATE TRIGGER img_audit_trigger
-AFTER INSERT OR UPDATE OR DELETE ON img
-FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-
--- Para la tabla img_users
-CREATE TRIGGER img_users_audit_trigger
-AFTER INSERT OR UPDATE OR DELETE ON img_users
-FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-
--- Para la tabla roles
-CREATE TRIGGER roles_audit_trigger
-AFTER INSERT OR UPDATE OR DELETE ON roles
-FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-
 ```
+
+
 ## Documentación del proyecto
 
 Toda la documentación del proyecto se podrán encontrar en el swagger dentro del mismo proyecto con la ruta de http://localhost:8080/doc/swagger-ui.html.
