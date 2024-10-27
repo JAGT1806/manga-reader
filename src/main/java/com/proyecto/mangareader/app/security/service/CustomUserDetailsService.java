@@ -45,6 +45,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 //    }
 
     private UserDetails buildUserForAuthentication(UsersEntity user, List<GrantedAuthority> authorities) {
-        return new CustomUserDetails(user.getIdUser(), user.getUsername(), user.getPassword(), authorities);
+        return new CustomUserDetails(user.getIdUser(), user.getEmail(), user.getPassword(), authorities);
     }
 }

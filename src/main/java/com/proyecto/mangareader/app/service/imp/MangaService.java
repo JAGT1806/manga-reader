@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Service
 @AllArgsConstructor
-public class MangaServices implements IMangaService {
+public class MangaService implements IMangaService {
     private final IMangaClient imangaClient;
     private static final String INCLUDES = "cover_art";
 

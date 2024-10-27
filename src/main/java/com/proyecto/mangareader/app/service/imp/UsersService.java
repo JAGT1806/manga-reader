@@ -13,21 +13,13 @@ import com.proyecto.mangareader.app.responses.user.UserResponse;
 import com.proyecto.mangareader.app.security.JwtTokenProvider;
 import com.proyecto.mangareader.app.service.IUsersService;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,7 +28,7 @@ public class UsersService implements IUsersService {
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    // private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public UserListResponse getAllUsers(String username, String email, String role, int offset, int limit) {
@@ -78,11 +70,7 @@ public class UsersService implements IUsersService {
         }
         UsersEntity user = new UsersEntity();
 
-        user.setUsername(inUsersDTO.getUsername());
-        user.setEmail(inUsersDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(inUsersDTO.getPassword()));
-        user.setDateCreate(LocalDateTime.now());
-
+        setDTOtoUser(user, inUsersDTO, true);
 
         // Establecer el rol a partir del ID proporcionado
         RolesEntity role = rolesRepository.findById(inUsersDTO.getRolId())
@@ -119,11 +107,7 @@ public class UsersService implements IUsersService {
 
         UsersEntity user = usersRepository.findById(id).orElse(null);
         if (user != null) {
-            user.setUsername(inUsersDTO.getUsername());
-            user.setEmail(inUsersDTO.getEmail());
-            user.setPassword(inUsersDTO.getPassword());
-            user.setDateModified(LocalDateTime.now());
-
+            setDTOtoUser(user, inUsersDTO, false);
 
             usersRepository.save(user);
 
@@ -135,7 +119,7 @@ public class UsersService implements IUsersService {
         }
     }
 
-    private OutUsersDTO setUserDTO(@org.jetbrains.annotations.NotNull UsersEntity user) {
+    private OutUsersDTO setUserDTO(UsersEntity user) {
         OutUsersDTO outUsersDTO = new OutUsersDTO();
         outUsersDTO.setIdUser(user.getIdUser());
         outUsersDTO.setUsername(user.getUsername());
@@ -152,4 +136,15 @@ public class UsersService implements IUsersService {
         return outUsersDTO;
     }
 
+    private void setDTOtoUser(UsersEntity user, InUsersDTO inUsersDTO, boolean isNew) {
+        user.setUsername(inUsersDTO.getUsername());
+        user.setEmail(inUsersDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(inUsersDTO.getPassword()));
+
+        if (isNew) {
+            user.setDateCreate(LocalDateTime.now());
+        } else {
+            user.setDateModified(LocalDateTime.now());
+        }
+    }
 }

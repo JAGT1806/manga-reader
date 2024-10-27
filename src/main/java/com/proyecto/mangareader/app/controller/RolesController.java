@@ -5,6 +5,7 @@ import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.exceptions.RoleNotFoundException;
 import com.proyecto.mangareader.app.responses.error.ErrorResponse;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
+import com.proyecto.mangareader.app.responses.role.RoleListResponse;
 import com.proyecto.mangareader.app.service.IRolesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,7 +31,7 @@ public class RolesController {
     @Operation(summary = "Obtener roles", description = "Obtiene todos los roles")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Roles encontrados exitosamente",
-                    content=@Content(schema = @Schema(implementation = RolesEntity.class))),
+                    content=@Content(schema = @Schema(implementation = RoleListResponse.class))),
             @ApiResponse(responseCode = "404", description = "No se encontraron roles o el rol específico no existe",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
@@ -39,16 +40,13 @@ public class RolesController {
     @GetMapping
     public ResponseEntity getAll(@RequestParam(required = false) String role) {
         try {
-            List<RolesEntity> roles = rolesService.getAllRoles(role);
-            if(roles.isEmpty() || (role != null && roles.get(0) == null)) {
-                throw new RoleNotFoundException("El rol no existe");
-            }
-            return new ResponseEntity<>(roles, HttpStatus.OK);
+            RoleListResponse response = rolesService.getAllRoles(role);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (RoleNotFoundException e) {
             ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch(Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
+            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -5,6 +5,7 @@ import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.exceptions.RoleNotFoundException;
 import com.proyecto.mangareader.app.repository.RolesRepository;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
+import com.proyecto.mangareader.app.responses.role.RoleListResponse;
 import com.proyecto.mangareader.app.service.IRolesService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,19 @@ public class RolesService implements IRolesService {
     private final RolesRepository rolesRepository;
 
     @Override
-    public List<RolesEntity> getAllRoles(String role) {
+    public RoleListResponse getAllRoles(String role) {
+        List<RolesEntity> roles;
         if(role != null) {
-            return rolesRepository.findByRolContaining(role).orElseThrow();
+            roles = rolesRepository.findByRolContaining(role).orElse(null);
+        } else {
+            roles = rolesRepository.findAll();
         }
-        return rolesRepository.findAll();
+
+        RoleListResponse response = new RoleListResponse();
+        response.setData(roles);
+        return response;
     }
+
 
     @Override
     public RolesEntity getById(Long id) {

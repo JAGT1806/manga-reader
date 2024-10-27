@@ -154,10 +154,10 @@ public class UsersController {
         }
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<String> loginUser(String email,String password) {
-        String login = usersService.loginUser(email, password);
-
-        return new ResponseEntity<>(login, HttpStatus.OK);
-    }
+//    @GetMapping("/login")
+//    public ResponseEntity<String> loginUser(String email,String password) {
+//        String login = usersService.loginUser(email, password);
+//
+//        return new ResponseEntity<>(login, HttpStatus.OK);
+//    }
 }

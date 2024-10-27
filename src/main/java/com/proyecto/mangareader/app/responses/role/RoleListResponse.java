@@ -6,11 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoleResponse {
+public class RoleListResponse {
     @Schema(example = "ok")
     private final String message = "ok";
-    private RolesEntity data; // Es la data muestra al usuario o usuarios
+    private List<RolesEntity> data;
+    private int offset;
+    private int limit;
+    private long total;
 }

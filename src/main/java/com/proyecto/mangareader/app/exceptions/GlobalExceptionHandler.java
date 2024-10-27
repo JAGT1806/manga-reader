@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     // Excepciones para el endpoint (/api/role)
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<RoleResponse> handleRoleNotFoundException(RoleNotFoundException ex) {
-        RoleResponse response = new RoleResponse(null, null, ex.getMessage());
+        RoleResponse response = new RoleResponse();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 

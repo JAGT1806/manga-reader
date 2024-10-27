@@ -12,4 +12,5 @@ public class OutUsersDTO {
     private String rol;
     private LocalDate dateCreated;
     private LocalDate dateModified;
+    private String image_profile;
 }
