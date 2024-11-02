@@ -4,6 +4,7 @@ import com.proyecto.mangareader.app.dto.in.InLoginDTO;
 import com.proyecto.mangareader.app.responses.error.ErrorResponse;
 import com.proyecto.mangareader.app.responses.session.SessionResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
+import com.proyecto.mangareader.app.security.JwtUtil;
 import com.proyecto.mangareader.app.service.imp.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
@@ -50,6 +51,17 @@ public class AuthController {
         } catch (Exception e) {
             ErrorResponse errorResponse = new ErrorResponse("No hay sesión activa", HttpStatus.UNAUTHORIZED.value(), LocalDateTime.now());
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/validate-token")
+    public ResponseEntity<String> validateToken(@RequestParam("tokenValue") String tokenValue) {
+        try {
+            // Validate the token without "Bearer " prefix
+            String username = JwtUtil.extractUsername(tokenValue);
+            return ResponseEntity.ok("Token valid for user: " + username);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
     }
 }

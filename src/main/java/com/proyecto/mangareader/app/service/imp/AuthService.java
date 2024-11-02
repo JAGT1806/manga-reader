@@ -5,6 +5,7 @@ import com.proyecto.mangareader.app.entity.UsersEntity;
 import com.proyecto.mangareader.app.repository.UsersRepository;
 import com.proyecto.mangareader.app.responses.session.SessionResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
+import com.proyecto.mangareader.app.security.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -56,7 +57,8 @@ public class AuthService {
             UsersEntity user = usersRepository.findByEmail(email)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-            return new UserResponse(converToDTO(user));
+            String token = JwtUtil.generateToken(user.getEmail());
+            return new UserResponse(converToDTO(user, token));
         } catch (AuthenticationException e) {
             throw new RuntimeException("Credenciales inválidas");
         }
@@ -70,12 +72,13 @@ public class AuthService {
         SecurityContextHolder.clearContext();
     }
 
-    private OutUsersDTO converToDTO(UsersEntity user) {
+    private OutUsersDTO converToDTO(UsersEntity user, String token) {
         OutUsersDTO dto = new OutUsersDTO();
         dto.setIdUser(user.getIdUser());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setRol(user.getRol().getRol());
+        dto.setToken(token);
         if(user.getDateCreate() != null) {
             dto.setDateCreated(LocalDate.from(user.getDateCreate()));
         }
@@ -101,7 +104,7 @@ public class AuthService {
         UsersEntity user = usersRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         SessionResponse sessionResponse = new SessionResponse();
-        sessionResponse.setUser(converToDTO(user));
+        sessionResponse.setUser(converToDTO(user, null));
         sessionResponse.setLoginTime(LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(session.getCreationTime()),
                 ZoneId.systemDefault()
