@@ -82,7 +82,7 @@ public class MangaService implements IMangaService {
 
     @Override
     public MangaResponse getManga(String id) {
-        Map<String, Object> params = imangaClient.getManga(id);
+        Map<String, Object> params = imangaClient.getManga(id, INCLUDES);
         return convertToMangaResponse(params);
     }
 

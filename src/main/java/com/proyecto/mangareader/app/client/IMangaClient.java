@@ -20,7 +20,7 @@ public interface IMangaClient {
             @RequestParam(value="contentRating[]", defaultValue = "safe") List<String> contentRating);
 
     @GetMapping("/manga/{id}")
-    Map<String, Object> getManga(@PathVariable("id") String id);
+    Map<String, Object> getManga(@PathVariable("id") String id, @RequestParam("includes[]") String includes);
 
     @GetMapping("/manga/{id}/feed")
     Map<String, Object> getMangaFeed(
