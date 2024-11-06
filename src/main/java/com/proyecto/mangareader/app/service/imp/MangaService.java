@@ -26,7 +26,7 @@ public class MangaService implements IMangaService {
     private static final String INCLUDES = "cover_art";
 
     @Override
-    public ListMangasResponse listMangas(String tile, int offset, int limit, boolean nsfw) {
+    public ListMangasResponse listMangas(String tile, int offset, int limit, boolean nsfw, String language) {
         List<String> contentRatingFilters = new ArrayList<>();
         contentRatingFilters.add("safe");
         contentRatingFilters.add("suggestive");
@@ -35,7 +35,11 @@ public class MangaService implements IMangaService {
             contentRatingFilters.add("erotica");
             contentRatingFilters.add("pornographic");
         }
-        Map<String, Object> params = imangaClient.getAllMangas(tile, INCLUDES, offset, limit, contentRatingFilters);
+
+        List<String> availableTranslatedLanguage = new ArrayList<>();
+        setAvailableTranslatedLanguage(language, availableTranslatedLanguage);
+
+        Map<String, Object> params = imangaClient.getAllMangas(tile, INCLUDES, offset, limit, contentRatingFilters, availableTranslatedLanguage);
 
         return convertToListMangaResponse(params, offset, limit);
     }
@@ -118,7 +122,7 @@ public class MangaService implements IMangaService {
 
 
     @Override
-    public FeedMangaResponse searchFeed(String id, int offset, int limit, boolean nsfw) {
+    public FeedMangaResponse searchFeed(String id, int offset, int limit, boolean nsfw, String language) {
         List<String> contentRatingFilters = new ArrayList<>();
         contentRatingFilters.add("safe");
         contentRatingFilters.add("suggestive");
@@ -127,7 +131,11 @@ public class MangaService implements IMangaService {
             contentRatingFilters.add("erotica");
             contentRatingFilters.add("pornographic");
         }
-        Map<String, Object> params = imangaClient.getMangaFeed(id, offset, limit, contentRatingFilters, null, "asc", "asc");
+
+        List<String> availableTranslatedLanguage = new ArrayList<>();
+        setAvailableTranslatedLanguage(language, availableTranslatedLanguage);
+
+        Map<String, Object> params = imangaClient.getMangaFeed(id, offset, limit, contentRatingFilters, null, "asc", "asc", availableTranslatedLanguage);
 
         return convertToFeedMangaResponse(params, offset, limit);
     }
@@ -167,6 +175,27 @@ public class MangaService implements IMangaService {
 
         return feedMangaResponse;
     }
+
+    private void setAvailableTranslatedLanguage(String language, List<String> availableTranslatedLanguage) {
+        switch (language) {
+            case "en-US": {
+                availableTranslatedLanguage.add("en");
+                break;
+            }
+
+            case "es-CO": {
+                availableTranslatedLanguage.add("es");
+                availableTranslatedLanguage.add("es-la");
+                break;
+            }
+
+            default: {
+                availableTranslatedLanguage.add(language);
+            }
+        }
+
+    }
+
 
     @Override
     public ChapterMangaResponse getChapterManga(String id) {

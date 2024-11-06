@@ -3,6 +3,7 @@ package com.proyecto.mangareader.app.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -17,7 +18,8 @@ public interface IMangaClient {
             @RequestParam("includes[]") String includes,
             @RequestParam(value="offset", defaultValue = "0") int offset,
             @RequestParam(value="limit", defaultValue = "10") int limit,
-            @RequestParam(value="contentRating[]", defaultValue = "safe") List<String> contentRating);
+            @RequestParam(value="contentRating[]", defaultValue = "safe") List<String> contentRating,
+            @RequestParam(value="availableTranslatedLanguage[]", defaultValue = "es") List<String> availableTranslatedLanguage);
 
     @GetMapping("/manga/{id}")
     Map<String, Object> getManga(@PathVariable("id") String id, @RequestParam("includes[]") String includes);
@@ -30,7 +32,8 @@ public interface IMangaClient {
             @RequestParam(value="contentRating[]", defaultValue = "safe") List<String> contentRating,
             @RequestParam(value="includeFutureUpdates", defaultValue = "1") Byte includeFutureUpdates,
             @RequestParam(value="order[volume]", defaultValue = "asc") String volume,
-            @RequestParam(value="order[chapter]", defaultValue = "asc") String chapter);
+            @RequestParam(value="order[chapter]", defaultValue = "asc") String chapter,
+            @RequestParam(value="translatedLanguage[]", defaultValue = "es") List<String> availableTranslatedLanguage);
 
     @GetMapping("/at-home/server/{id}")
     Map<String, Object> getMangaAtHome(

@@ -41,8 +41,9 @@ public class MangaController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false, defaultValue = "0") int offset,
             @RequestParam(required = false, defaultValue = "100") int limit,
-            @RequestParam(required = false, defaultValue = "false") boolean nsfw) {
-        return mangaService.listMangas(title, offset, limit, nsfw);
+            @RequestParam(required = false, defaultValue = "false") boolean nsfw,
+            @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
+        return mangaService.listMangas(title, offset, limit, nsfw, language);
     }
 
     @GetMapping("/{id}")
@@ -62,8 +63,9 @@ public class MangaController {
             @PathVariable String id,
             @RequestParam(required = false, defaultValue = "0") int offset,
             @RequestParam(required = false, defaultValue = "10") int limit,
-            @RequestParam(required = false, defaultValue = "false") boolean nsfw) {
-        return mangaService.searchFeed(id, offset, limit, nsfw);
+            @RequestParam(required = false, defaultValue = "false") boolean nsfw,
+            @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
+        return mangaService.searchFeed(id, offset, limit, nsfw, language);
     }
 
     @GetMapping("/chapter/{id}")

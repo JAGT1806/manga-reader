@@ -7,11 +7,11 @@ import com.proyecto.mangareader.app.responses.apiMangaDex.MangaResponse;
 
 
 public interface IMangaService {
-    ListMangasResponse listMangas(String tile, int offset, int limit, boolean nsfw);
+    ListMangasResponse listMangas(String tile, int offset, int limit, boolean nsfw, String language);
 
     MangaResponse getManga(String id);
 
-    FeedMangaResponse searchFeed(String id, int offset, int limit, boolean nsfw);
+    FeedMangaResponse searchFeed(String id, int offset, int limit, boolean nsfw, String language);
 
     ChapterMangaResponse getChapterManga(String id);
 
