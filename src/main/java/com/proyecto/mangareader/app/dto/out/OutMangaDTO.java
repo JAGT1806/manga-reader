@@ -8,7 +8,7 @@ import java.util.Map;
 public class OutMangaDTO {
     private String id;
     private String title;
-    private Map<String, Object> description;
+    private String description;
     private String coverId;
     private String fileName;
 }

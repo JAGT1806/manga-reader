@@ -10,7 +10,6 @@ import com.proyecto.mangareader.app.repository.UsersRepository;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.responses.user.UserListResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
-import com.proyecto.mangareader.app.security.JwtTokenProvider;
 import com.proyecto.mangareader.app.service.IUsersService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;

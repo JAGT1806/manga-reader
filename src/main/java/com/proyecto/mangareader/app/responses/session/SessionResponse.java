@@ -12,5 +12,6 @@ public class SessionResponse {
     private LocalDateTime loginTime;
     private String sessionId;
     private List<String> authorities;
+    private String token;
     private boolean active;
 }

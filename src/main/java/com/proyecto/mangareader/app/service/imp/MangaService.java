@@ -41,10 +41,10 @@ public class MangaService implements IMangaService {
 
         Map<String, Object> params = imangaClient.getAllMangas(tile, INCLUDES, offset, limit, contentRatingFilters, availableTranslatedLanguage);
 
-        return convertToListMangaResponse(params, offset, limit);
+        return convertToListMangaResponse(params, offset, limit, language);
     }
 
-    private ListMangasResponse convertToListMangaResponse(Map<String, Object> params, int offset, int limit) {
+    private ListMangasResponse convertToListMangaResponse(Map<String, Object> params, int offset, int limit, String language) {
         List<Map<String, Object>> mangaList = (List<Map<String, Object>>) params.get("data");
 
         List<OutMangaDTO> listMangaDTO = new ArrayList<>();
@@ -55,7 +55,7 @@ public class MangaService implements IMangaService {
 
             Map<String, Object> attributes = (Map<String, Object>) manga.get("attributes");
             mangaDTO.setTitle((String) ((Map<String, Object>) attributes.get("title")).get("en"));
-            mangaDTO.setDescription((Map<String, Object>) attributes.get("description"));
+            mangaDTO.setDescription((String) ((Map<String, Object>) attributes.get("description")).get(language));
 
             List<Map<String, Object>> relationships = (List<Map<String, Object>>) manga.get("relationships");
             for (Map<String, Object> relationship : relationships) {
@@ -85,12 +85,12 @@ public class MangaService implements IMangaService {
     }
 
     @Override
-    public MangaResponse getManga(String id) {
+    public MangaResponse getManga(String id, String language) {
         Map<String, Object> params = imangaClient.getManga(id, INCLUDES);
-        return convertToMangaResponse(params);
+        return convertToMangaResponse(params, language);
     }
 
-    public MangaResponse convertToMangaResponse(Map<String, Object> params) {
+    public MangaResponse convertToMangaResponse(Map<String, Object> params, String language) {
         Map<String, Object> manga = (Map<String, Object>) params.get("data");
 
         OutMangaDTO mangaDTO = new OutMangaDTO();
@@ -99,7 +99,7 @@ public class MangaService implements IMangaService {
 
         Map<String, Object> attributes = (Map<String, Object>) manga.get("attributes");
         mangaDTO.setTitle((String) ((Map<String, Object>) attributes.get("title")).get("en"));
-        mangaDTO.setDescription((Map<String, Object>) attributes.get("description"));
+        mangaDTO.setDescription((String) ((Map<String, Object>) attributes.get("description")).get(language));
 
         List<Map<String, Object>> relationships = (List<Map<String, Object>>) manga.get("relationships");
         for (Map<String, Object> relationship : relationships) {
@@ -177,21 +177,10 @@ public class MangaService implements IMangaService {
     }
 
     private void setAvailableTranslatedLanguage(String language, List<String> availableTranslatedLanguage) {
-        switch (language) {
-            case "en-US": {
-                availableTranslatedLanguage.add("en");
-                break;
-            }
+        availableTranslatedLanguage.add(language);
 
-            case "es-CO": {
-                availableTranslatedLanguage.add("es");
-                availableTranslatedLanguage.add("es-la");
-                break;
-            }
-
-            default: {
-                availableTranslatedLanguage.add(language);
-            }
+        if(language.equals("es")) {
+            availableTranslatedLanguage.add("es-la");
         }
 
     }

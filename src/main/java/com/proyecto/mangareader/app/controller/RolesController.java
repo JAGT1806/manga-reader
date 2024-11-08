@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,11 +33,13 @@ public class RolesController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Roles encontrados exitosamente",
                     content=@Content(schema = @Schema(implementation = RoleListResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - Se requiere rol ADMIN"),
             @ApiResponse(responseCode = "404", description = "No se encontraron roles o el rol específico no existe",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity getAll(@RequestParam(required = false) String role) {
         try {
@@ -57,11 +60,12 @@ public class RolesController {
                     content = @Content(schema = @Schema(implementation = RolesEntity.class))),
             @ApiResponse(responseCode = "400", description = "Datos de rol inválidos",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - Se requiere rol ADMIN"),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
-    public ResponseEntity save(InRolesDTO roleDTO) {
+    public ResponseEntity save(@RequestBody InRolesDTO roleDTO) {
         try {
             RolesEntity role = new RolesEntity();
             role.setRol(roleDTO.getRole());
@@ -77,9 +81,10 @@ public class RolesController {
     @Operation(summary = "Obtener un rol por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol encontrado exitosamente",
-                content = @Content(schema = @Schema(implementation = RolesEntity.class))),
+                    content = @Content(schema = @Schema(implementation = RolesEntity.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - Se requiere rol ADMIN"),
             @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe",
-                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{id}")
@@ -105,6 +110,7 @@ public class RolesController {
                     content=@Content(schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - Se requiere rol ADMIN"),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -128,6 +134,7 @@ public class RolesController {
                     content = @Content(schema = @Schema(implementation = RolesEntity.class))),
             @ApiResponse(responseCode = "400", description = "Datos de rol inválidos",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - Se requiere rol ADMIN"),
             @ApiResponse(responseCode = "404", description = "El rol con el ID proporcionado no existe",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",

@@ -47,8 +47,8 @@ public class MangaController {
     }
 
     @GetMapping("/{id}")
-    public MangaResponse getMangaById(@PathVariable String id) {
-        return mangaService.getManga(id);
+    public MangaResponse getMangaById(@PathVariable String id, @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
+        return mangaService.getManga(id, language);
     }
 
     @Operation(summary = "Obtener todos los mangas")
