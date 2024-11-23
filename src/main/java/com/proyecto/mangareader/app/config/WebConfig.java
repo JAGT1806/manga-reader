@@ -11,7 +11,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // Aplica a todas las rutas
                 .allowedOrigins("http://localhost:4200") // Aplica para Angular
                 .allowedOriginPatterns("http://localhost:[*]")
-                .allowedMethods("GET", "POST", "PUT", "DELETE") // métodos HTTP
-                .allowedHeaders("*"); // permite cualquier header
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // métodos HTTP
+                .allowedHeaders("*")
+                .exposedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

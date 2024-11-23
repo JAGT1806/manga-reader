@@ -32,6 +32,8 @@ Estas dependencias se pueden encontrar en el `pom.xml`.
 * **Spring Docs:** Dependencia para la documentación del backend.
 * **OpenFeign:** Permite la realización a petición de un endpoint y/o una API externa.
 * **Spring Security:** Se encarga de la seguridad del backend.
+* **JWT:** Se encargará de la autenticación de usuarios por tokens.
+* **Java Mail Sender:** Usado para enviar
 
 ## Configuración de la base de datos
 
@@ -40,9 +42,9 @@ Tras levantar la base de datos por medio del proyecto, se harán unas configurac
 Las entidades que se manejarán son:
 - **favorites** : Se almacenarán los mangas favoritos del usuario
 - **img**: Almacena las imágenes que se pueden colocar los usuarios.
-- **img_users** : Almacena la imagen que tienen los usuarios
 - **roles** : Almacena los roles
 - **users** : Almacena la información de los usuarios.
+- **user_role:** Almacena el user id y 
 
 Ahora vamos a hacer algunas restricciones a dos entidades, esto lo hacemos ya dentro de la misma base de datos:
 ``` sql
@@ -50,10 +52,6 @@ ALTER TABLE IF EXISTS public.favorites
     ADD CONSTRAINT unique_user_manga UNIQUE (user_id, id_manga);
 ```
 
-``` sql
-ALTER TABLE IF EXISTS public.img_users
-    ADD CONSTRAINT unique_user_image UNIQUE (user_id, img_id);
-```
 
 Esto hará que no se generen valores duplicados en estas tablas.
 
@@ -128,38 +126,53 @@ CREATE TRIGGER img_audit_trigger
 AFTER INSERT OR UPDATE OR DELETE ON img 
 FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
 
-CREATE TRIGGER img_users_audit_trigger 
-AFTER INSERT OR UPDATE OR DELETE ON img_users 
+CREATE TRIGGER roles_audit_trigger 
+AFTER INSERT OR UPDATE OR DELETE ON roles 
 FOR EACH ROW EXECUTE FUNCTION audit_trigger_function(); 
 
--- Inserción inicial de roles y usuario admin 
+
+-- Inserción de imagen por defecto
+INSERT INTO img (url, anime)  
+VALUES ('https://i.ibb.co/WfP4Wv0/585e4beacb11b227491c3399.png', 'Default Profile Image')  
+ON CONFLICT DO NOTHING;
+
+-- Inserción inicial de roles
 INSERT INTO roles (rol) VALUES ('ROLE_ADMIN'), ('ROLE_USER') 
 ON CONFLICT (rol) DO NOTHING; 
 
 -- Crear usuario admin inicial 
--- La contraseña deberá ser hasheada antes de insertar 
-INSERT INTO users ( 
-	username, 
-	email, 
-	password, 
-	date_create, 
-	date_update, 
-	rol_id 
-) 
-SELECT 
-	'admin', 
-	'admin@mangareader.com', 
-	-- Asegúrate de cambiar esto por la contraseña hasheada real
+-- La contraseña deberá ser hasheada antes de insertar
+INSERT INTO users (  
+    username,  
+    email,  
+    password,  
+    date_create,  
+    profile_image_id,
+    enable  
+)  
+SELECT  
+    'admin',  
+    'admin@mangareader.com',  
+    '$2a$10$st4YvGfdaVAhnExpAeWH6eSZP.cqHoWu8GCFP9GlRiD6IpwNWFcTO',
+    -- Asegúrate de cambiar esto por la contraseña hasheada real
 	'$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 
 	-- En este caso se usará 'admin123'
 	-- $2a$10$st4YvGfdaVAhnExpAeWH6eSZP.cqHoWu8GCFP9GlRiD6IpwNWFcTO
-	-- Puede cambiar luego esta contraseña.
-	CURRENT_TIMESTAMP, 
-	CURRENT_TIMESTAMP, 
-	r.id_rol 
-FROM roles r 
-WHERE r.rol = 'ROLE_ADMIN' 
-ON CONFLICT (email) DO NOTHING; 
+	-- Puede cambiar luego esta contraseña.  
+    CURRENT_TIMESTAMP,  
+    i.id,
+    true  
+FROM img i  
+WHERE i.url = 'https://i.ibb.co/WfP4Wv0/585e4beacb11b227491c3399.png'  
+ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)  
+SELECT u.id_user, r.id_rol  
+FROM users u  
+         CROSS JOIN roles r  
+WHERE u.email = 'admin@mangareader.com'  
+  AND r.rol = 'ROLE_ADMIN'  
+ON CONFLICT DO NOTHING;
 
 -- Función para establecer el usuario actual 
 CREATE OR REPLACE FUNCTION set_current_user(p_user_id BIGINT, p_username VARCHAR)
@@ -170,7 +183,6 @@ BEGIN
 END; 
 $$ LANGUAGE plpgsql;
 ```
-
 
 ## Documentación del proyecto
 

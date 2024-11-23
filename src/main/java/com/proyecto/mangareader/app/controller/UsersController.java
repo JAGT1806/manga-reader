@@ -1,7 +1,7 @@
 package com.proyecto.mangareader.app.controller;
 
-import com.proyecto.mangareader.app.dto.in.InUsersDTO;
-import com.proyecto.mangareader.app.exceptions.UserNotFoundException;
+import com.proyecto.mangareader.app.request.users.ChangePasswordRequest;
+import com.proyecto.mangareader.app.request.users.UpdatedUserRequest;
 import com.proyecto.mangareader.app.responses.error.ErrorResponse;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.responses.user.UserListResponse;
@@ -18,14 +18,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/user")
 @AllArgsConstructor
 @Tag(name="users", description = "API para gestionar los usuarios")
+@CrossOrigin(origins = "http://localhost:4200")
 public class UsersController {
     private final IUsersService usersService;
 
@@ -38,52 +39,22 @@ public class UsersController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity getAllUsers(
+    public ResponseEntity<UserListResponse> getAllUsers(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @Parameter(in = ParameterIn.QUERY, description = "Filtrar por rol",
                         required = false,
                         allowEmptyValue = true,
-                        schema = @Schema(allowableValues = { "admin_rol", "user_rol"}))
+                        schema = @Schema(allowableValues = { "ROLE_ADMIN", "ROLE_USER"}))
             @RequestParam(required = false) String role,
             @RequestParam(required = false, defaultValue = "0") int offset,
-            @RequestParam(required = false, defaultValue = "10") int limit) {
-        try {
-            UserListResponse response = usersService.getAllUsers(username, email, role, offset, limit);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (UserNotFoundException e){
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-        } catch(Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            @RequestParam(required = false, defaultValue = "10") int limit,
+            @RequestParam(required = false, defaultValue = "null") Boolean enabled ) {
+        UserListResponse response = usersService.getAllUsers(username, email, role, offset, limit, enabled);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-    @Operation(summary = "Guardar un nuevo usuario", description = "Crea un nuevo usuario en el sistema")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "usuario creado exitosamente",
-                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de usuarios inválidos",
-                    content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
-                    content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PostMapping
-    public ResponseEntity createUser(InUsersDTO inUsersDTO) {
-        try {
-            UserResponse response = usersService.saveUser(inUsersDTO);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
 
     @Operation(summary = "Obtener un usuario por ID")
     @ApiResponses(value = {
@@ -94,44 +65,52 @@ public class UsersController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @userSecurity.isUserAllowedToModify(#id)")
     @GetMapping("/{id}")
-    public ResponseEntity getUserById(@PathVariable Long id) {
-        try {
-            UserResponse response = usersService.getUserById(id);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (UserNotFoundException e) {
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        UserResponse response = usersService.getUserById(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Operation(summary = "Modificar un usuario por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado exitosamente",
                     content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Argumentos inválidos",
+                    content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "El usuario con el ID proporcionado no existe",
+                    content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Conflicto con el email",
+                    content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @userSecurity.isUserAllowedToModify(#id)")
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UpdatedUserRequest request) {
+            UserResponse response = usersService.updateUser(id, request);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "Cambiar la contraseña de un usuario")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario modificado exitosamente",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Argumentos inválidos",
+                    content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "El usuario con el ID proporcionado no existe",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping("/{id}")
-    public ResponseEntity updateUser(@PathVariable Long id, InUsersDTO inUsersDTO) {
-        try{
-            UserResponse response = usersService.updateUser(id, inUsersDTO);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @userSecurity.isUserAllowedToModify(#id)")
+    @PutMapping("/{id}/password")
+    public ResponseEntity<OkResponse> updatePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+        usersService.changePassword(id, request);
+        return new ResponseEntity<>(new OkResponse(), HttpStatus.OK);
     }
 
-    @Operation(summary = "Modificar un usuario por ID")
+    @Operation(summary = "Eliminar un usuario por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado exitosamente",
                     content = @Content(schema = @Schema(implementation = OkResponse.class))),
@@ -141,23 +120,10 @@ public class UsersController {
                     content=@Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteUser(@PathVariable Long id) {
-        try {
-            OkResponse response = usersService.deleteUser(id);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (UserNotFoundException e) {
-            ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @userSecurity.isUserAllowedToModify(#id)")
+    public ResponseEntity<OkResponse> deleteUser(@PathVariable Long id) {
+        OkResponse response = usersService.deleteUser(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-//    @GetMapping("/login")
-//    public ResponseEntity<String> loginUser(String email,String password) {
-//        String login = usersService.loginUser(email, password);
-//
-//        return new ResponseEntity<>(login, HttpStatus.OK);
-//    }
 }

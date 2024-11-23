@@ -1,9 +1,9 @@
 package com.proyecto.mangareader.app.service.imp;
 
 import com.proyecto.mangareader.app.client.IMangaClient;
-import com.proyecto.mangareader.app.dto.out.OutFeedMangaDTO;
-import com.proyecto.mangareader.app.dto.out.OutMangaDTO;
-import com.proyecto.mangareader.app.dto.out.auxiliar.AuxFeedManga;
+import com.proyecto.mangareader.app.dto.mangas.FeedMangaDTO;
+import com.proyecto.mangareader.app.dto.mangas.MangaDTO;
+import com.proyecto.mangareader.app.dto.auxiliary.AuxFeedManga;
 import com.proyecto.mangareader.app.responses.apiMangaDex.ChapterMangaResponse;
 import com.proyecto.mangareader.app.responses.apiMangaDex.FeedMangaResponse;
 import com.proyecto.mangareader.app.responses.apiMangaDex.ListMangasResponse;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +46,10 @@ public class MangaService implements IMangaService {
     private ListMangasResponse convertToListMangaResponse(Map<String, Object> params, int offset, int limit, String language) {
         List<Map<String, Object>> mangaList = (List<Map<String, Object>>) params.get("data");
 
-        List<OutMangaDTO> listMangaDTO = new ArrayList<>();
+        List<MangaDTO> listMangaDTO = new ArrayList<>();
 
         for (Map<String, Object> manga : mangaList) {
-            OutMangaDTO mangaDTO = new OutMangaDTO();
+            MangaDTO mangaDTO = new MangaDTO();
             mangaDTO.setId((String) manga.get("id"));
 
             Map<String, Object> attributes = (Map<String, Object>) manga.get("attributes");
@@ -93,7 +92,7 @@ public class MangaService implements IMangaService {
     public MangaResponse convertToMangaResponse(Map<String, Object> params, String language) {
         Map<String, Object> manga = (Map<String, Object>) params.get("data");
 
-        OutMangaDTO mangaDTO = new OutMangaDTO();
+        MangaDTO mangaDTO = new MangaDTO();
 
         mangaDTO.setId((String) manga.get("id"));
 
@@ -143,10 +142,10 @@ public class MangaService implements IMangaService {
     private FeedMangaResponse convertToFeedMangaResponse(Map<String, Object> params, int offset, int limit) {
         List<Map<String, Object>> feedManga = (List<Map<String, Object>>) params.get("data");
 
-        List<OutFeedMangaDTO> listFeedMangaDTO = new ArrayList<>();
+        List<FeedMangaDTO> listFeedMangaDTO = new ArrayList<>();
 
         for (Map<String, Object> feed : feedManga) {
-            OutFeedMangaDTO feedMangaDTO = new OutFeedMangaDTO();
+            FeedMangaDTO feedMangaDTO = new FeedMangaDTO();
             AuxFeedManga aux = new AuxFeedManga();
 
             feedMangaDTO.setId((String) feed.get("id"));

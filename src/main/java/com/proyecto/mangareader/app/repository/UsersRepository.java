@@ -14,23 +14,32 @@ import java.util.Optional;
 @Repository
 public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
 
-    @Query("SELECT u FROM UsersEntity u WHERE " +
-        "(:username IS NULL OR u.username LIKE %:username%) AND " +
-        "(:email IS NULL OR u.email LIKE %:email%) AND " +
-        "(:role IS NULL OR u.rol.rol LIKE %:role%)")
+    @Query("SELECT DISTINCT u FROM UsersEntity u LEFT JOIN u.roles r WHERE " +
+            "(:username IS NULL OR u.username LIKE %:username%) AND " +
+            "(:email IS NULL OR u.email LIKE %:email%) AND " +
+            "(:role IS NULL OR r.rol LIKE %:role%) AND " +
+            "(:enabled IS NULL OR u.enabled = :enabled)")
+
     List<UsersEntity> findByFilters(@Param("username") String username,
                                     @Param("email") String email,
                                     @Param("role") String role,
+                                    @Param("enabled") Boolean enabled,
                                     Pageable pageable);
 
-    @Query("SELECT COUNT(u) FROM UsersEntity u WHERE " +
+    @Query("SELECT COUNT(DISTINCT u) FROM UsersEntity u LEFT JOIN u.roles r WHERE " +
             "(:username IS NULL OR u.username LIKE %:username%) AND " +
             "(:email IS NULL OR u.email LIKE %:email%) AND " +
-            "(:role IS NULL OR u.rol.rol LIKE %:role%)")
+            "(:role IS NULL OR r.rol LIKE %:role%) AND " +
+            "(:enabled IS NULL OR u.enabled = :enabled)")
     Long countByFilters(@Param("username") String username,
                         @Param("email") String email,
-                        @Param("role") String role);
+                        @Param("role") String role,
+                        @Param("enabled") Boolean enabled);
 
 
     Optional<UsersEntity> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    Optional<List<UsersEntity>> findByEnabledFalse();
 }

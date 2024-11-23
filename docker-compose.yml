@@ -12,6 +12,24 @@ services:
       - manga_db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - manga_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mangaRedis
+    command: ["redis-server", "--requirepass", "redispassword"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - manga_network
 
 volumes:
   manga_db:
+  redis_data:
+
+networks:
+  manga_network:
+    driver: bridge

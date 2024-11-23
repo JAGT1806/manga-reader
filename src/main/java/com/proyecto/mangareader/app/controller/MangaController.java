@@ -73,5 +73,4 @@ public class MangaController {
         return mangaService.getChapterManga(id);
     }
 
-
 }

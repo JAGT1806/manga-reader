@@ -11,7 +11,7 @@
 	<groupId>com.proyecto</groupId>
 	<artifactId>manga-reader</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>manga-reader</name>
 	<description>manga-reader</description>
 	<url/>
@@ -131,7 +131,14 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
-    </dependencies>
+		
+
+		<!-- Java Mail Sender -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

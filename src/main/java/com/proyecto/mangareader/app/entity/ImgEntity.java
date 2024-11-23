@@ -17,6 +17,4 @@ public class ImgEntity {
 
     @Column(nullable = false)
     private String url;
-
-    private String anime;
 }
