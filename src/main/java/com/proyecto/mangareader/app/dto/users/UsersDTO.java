@@ -11,6 +11,7 @@ public class UsersDTO {
     private String username;
     private String email;
     private Set<String> rol;
+    private boolean enabled;
     private LocalDate dateCreated;
     private LocalDate dateModified;
     private String imageProfile;

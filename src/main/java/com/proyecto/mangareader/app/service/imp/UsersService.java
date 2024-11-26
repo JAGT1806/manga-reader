@@ -1,27 +1,21 @@
 package com.proyecto.mangareader.app.service.imp;
 
 import com.proyecto.mangareader.app.entity.ImgEntity;
+import com.proyecto.mangareader.app.repository.FavoritesRepository;
 import com.proyecto.mangareader.app.request.auth.RegisterRequest;
 import com.proyecto.mangareader.app.dto.users.UsersDTO;
 import com.proyecto.mangareader.app.entity.RolesEntity;
 import com.proyecto.mangareader.app.entity.UsersEntity;
-import com.proyecto.mangareader.app.entity.VerificationCodesEntity;
 import com.proyecto.mangareader.app.exceptions.*;
-import com.proyecto.mangareader.app.repository.RolesRepository;
 import com.proyecto.mangareader.app.repository.UsersRepository;
 import com.proyecto.mangareader.app.request.users.ChangePasswordRequest;
-import com.proyecto.mangareader.app.request.users.ForgotPasswordRequest;
-import com.proyecto.mangareader.app.request.auth.ResendValidatedRequest;
-import com.proyecto.mangareader.app.request.users.ResetPasswordRequest;
-import com.proyecto.mangareader.app.request.auth.VerificationRequest;
 import com.proyecto.mangareader.app.request.users.UpdatedUserRequest;
 import com.proyecto.mangareader.app.responses.ok.OkResponse;
 import com.proyecto.mangareader.app.responses.user.UserListResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
+import com.proyecto.mangareader.app.service.IImgService;
 import com.proyecto.mangareader.app.service.IUsersService;
-import com.proyecto.mangareader.app.service.IVerificationCodesService;
 import com.proyecto.mangareader.app.util.MessageUtil;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,12 +33,12 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UsersService implements IUsersService {
-    private final ImgService imgService;
+    private final IImgService imgService;
     private final UsersRepository usersRepository;
-    private final RolesRepository rolesRepository;
+    private final FavoritesRepository favoritesRepository;
     private final PasswordEncoder passwordEncoder;
-    private final IVerificationCodesService codesService;
     private final MessageUtil messageSource;
 
     @Override
@@ -144,103 +138,14 @@ public class UsersService implements IUsersService {
         if(!usersRepository.existsById(id)) {
             throw new UserNotFoundException(null);
         }
-        usersRepository.deleteById(id);
+            // Eliminar todos los registros relacionados
+            favoritesRepository.deleteAllByUserId_IdUser(id);
+
+            // Finalmente eliminar el usuario
+            usersRepository.deleteById(id);
+
         return new OkResponse();
     }
-
-
-
-    @Override
-    public UserResponse registerUser(RegisterRequest request) throws MessagingException {
-        if (request == null || request.getUsername().isEmpty() ||
-                request.getEmail().isEmpty() || request.getPassword().isEmpty()) {
-            throw new IllegalArgumentException(messageSource.getMessage("user.null"));
-        }
-
-
-        // Verificar si ya existe un usuario con ese email o username
-        if (usersRepository.existsByEmail(request.getEmail())) {
-            UsersEntity user = usersRepository.findByEmail(request.getEmail()).orElse(null);
-            throw new IllegalArgumentException(messageSource.getMessage("user.unique"));
-        }
-
-        UsersEntity user = new UsersEntity();
-        setDTOtoUser(user, request, true);
-        user.setEnabled(false);
-
-        RolesEntity role = rolesRepository.findByRol("ROLE_USER")
-                .orElseThrow(() -> new RoleNotFoundException(null));
-
-        Set<RolesEntity> roles = new HashSet<>();
-        roles.add(role);
-
-        user.setRoles(roles);
-
-        user.setProfileImage(imgService.getImg(1L));
-
-
-        try {
-            usersRepository.save(user);
-        } catch (DataIntegrityViolationException e) {
-            if(e.getMessage().contains("uk6dotkott2kjsp8vw4d0m25fb7")) {
-                throw new UniqueException(messageSource.getMessage("user.unique"));
-            }
-            throw e;
-        }
-
-        // Generar y enviar nuevo código
-        codesService.generateCode(user, VerificationCodesService.CodeType.REGISTRATION);
-
-        UsersDTO usersDTO = setUserDTO(user);
-        return new UserResponse(usersDTO);
-    }
-
-    @Override
-    @Transactional
-    public void verifyEmail(VerificationRequest request) {
-        String code = request.getCode();
-        VerificationCodesEntity verificationCode = codesService.getCode(code);
-        codesService.validateCode(verificationCode, VerificationCodesService.CodeType.REGISTRATION);
-
-        UsersEntity user = verificationCode.getUser();
-        user.setEnabled(true);
-        usersRepository.save(user);
-
-        // El código se inhabilita automáticamente después de la validación
-        codesService.useCode(verificationCode);
-    }
-
-
-    @Override
-    public void forgotPassword(ForgotPasswordRequest request) throws MessagingException {
-        UsersEntity user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
-
-        if(!user.isEnabled()) {
-            throw new UserNotEnabledException(null);
-        }
-
-        codesService.generateCode(user, VerificationCodesService.CodeType.PASSWORD_RESET);
-    }
-
-    @Override
-    public void resetPassword(ResetPasswordRequest request) {
-        String code = request.getCode();
-        UsersEntity user = codesService.getUserByCode(code, VerificationCodesService.CodeType.PASSWORD_RESET);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        usersRepository.save(user);
-    }
-
-    @Override
-    public void resendValidatedEmail(ResendValidatedRequest request) throws MessagingException {
-        UsersEntity user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
-
-        if(user.isEnabled()) {
-            throw new UserAlreadyEnabledException(null);
-        }
-
-        codesService.generateCode(user, VerificationCodesService.CodeType.REGISTRATION);
-    }
-
 
 
     // Métodos privados
@@ -249,6 +154,7 @@ public class UsersService implements IUsersService {
         usersDTO.setIdUser(user.getIdUser());
         usersDTO.setUsername(user.getUsername());
         usersDTO.setEmail(user.getEmail());
+        usersDTO.setEnabled(user.isEnabled());
 
         Set<RolesEntity> userRoles = user.getRoles();
         Set<String> roles = new HashSet<>();

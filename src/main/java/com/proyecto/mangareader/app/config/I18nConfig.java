@@ -18,7 +18,7 @@ public class I18nConfig {
 
         localeResolver.setSupportedLocales(Arrays.asList(
                 new Locale("es"),
-                Locale.US,
+                new Locale("en"),
                 new Locale("fr")
         ));
 

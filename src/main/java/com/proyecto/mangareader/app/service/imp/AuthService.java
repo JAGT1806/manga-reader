@@ -13,17 +13,18 @@ import com.proyecto.mangareader.app.request.auth.VerificationRequest;
 import com.proyecto.mangareader.app.request.users.ForgotPasswordRequest;
 import com.proyecto.mangareader.app.request.users.ResetPasswordRequest;
 import com.proyecto.mangareader.app.responses.auth.LoginResponse;
-import com.proyecto.mangareader.app.responses.message.MessageResponse;
 import com.proyecto.mangareader.app.responses.user.UserResponse;
 import com.proyecto.mangareader.app.security.util.JwtUtil;
 import com.proyecto.mangareader.app.security.entity.CustomUserDetails;
 import com.proyecto.mangareader.app.security.service.CustomUserDetailsService;
 import com.proyecto.mangareader.app.service.IAuthService;
+import com.proyecto.mangareader.app.service.IImgService;
 import com.proyecto.mangareader.app.service.IVerificationCodesService;
 import com.proyecto.mangareader.app.util.MessageUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,47 +41,66 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Servicio de autenticación para la aplicación Manga Reader.
- * Proporciona funcionalidades de inicio de sesión, verificación de sesión y validación de tokens.
+ * Servicio de autenticación para la aplicación Manga Reader que gestiona los procesos
+ * de autenticación, registro, verificación de usuarios y gestión de tokens.
+ *
+ * Esta clase proporciona funcionalidades centrales de seguridad incluyendo:
+ * - Inicio de sesión de usuarios
+ * - Registro de nuevos usuarios
+ * - Verificación de correo electrónico
+ * - Recuperación de contraseña
+ * - Validación de tokens JWT
+ *
  * @author Jhon Alexander Gómez Trujillo
  */
 @Service
 @RequiredArgsConstructor
 public class AuthService implements IAuthService {
+    /** Repositorio para operaciones de persistencia de usuarios.*/
     private final UsersRepository usersRepository;
-    private final UsersService usersService;
+    /** Servicio para gestión de imágenes de perfil. */
+    private final IImgService imgService;
+    /** Utilidad para generación y validación de tokens JWT. */
     private final JwtUtil jwtUtil;
+    /** Servicio personalizado para cargar detalles de usuario. */
     private final CustomUserDetailsService userDetailsService;
+    /**Gestor de autenticación para validar credenciales. */
     private final AuthenticationManager authenticationManager;
+    /** Repositorio para gestión de roles de usuario. */
     private final RolesRepository rolesRepository;
+    /** Codificador de contraseñas para seguridad. */
     private final PasswordEncoder passwordEncoder;
+    /** Servicio para generación y gestión de códigos de verificación. */
     private final IVerificationCodesService codesService;
-    private final MessageUtil messageSource;
+    /** Utilidad para gestión de mensajes localizados. */
+    private final MessageUtil messageUtil;
 
     /**
-     * Inicia sesión de usuario mediante autenticación con email y contraseña.
+     * Autentica a un usuario en el sistema utilizando credenciales de correo electrónico y contraseña.
      *
-     * @param email    El correo electrónico del usuario.
-     * @param password La contraseña del usuario.
-     * @return ResponseEntity que contiene la respuesta de éxito con los datos de sesión o un error si las credenciales son inválidas.
+     * @param email Correo electrónico del usuario para iniciar sesión
+     * @param password Contraseña del usuario
+     * @return Respuesta HTTP con detalles de inicio de sesión, incluyendo token JWT
+     * @throws UsernameNotFoundException Si el usuario no existe
+     * @throws IllegalStateException Si la cuenta del usuario no está habilitada
      */
     @Override
-    public ResponseEntity<?> login(String email, String password) {
-        // Obtener el usuario y crear la respuesta
+    public ResponseEntity<LoginResponse> login(String email, String password) {
+        
         UsersEntity user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(messageSource.getMessage("auth.error.user.not.found")));
+                .orElseThrow(() -> new UsernameNotFoundException(messageUtil.getMessage("auth.error.user.not.found")));
 
         if(!user.isEnabled()) {
-            throw new UserNotEnabledException(messageSource.getMessage("user.not.enabled"));
+            throw new IllegalStateException(messageUtil.getMessage("user.not.enabled"));
         }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
 
-        // Obtener los detalles del usuario autenticado
+       
         CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
-        // Generar el token JWT
+        
         String jwt = jwtUtil.generateToken(userDetails);
 
         return new ResponseEntity<>(new LoginResponse(
@@ -93,20 +113,29 @@ public class AuthService implements IAuthService {
         ), HttpStatus.OK);
     }
 
+    /**
+     * Registra un nuevo usuario en el sistema con los datos proporcionados.
+     *
+     * @param request Solicitud de registro con información del nuevo usuario
+     * @return Respuesta con los detalles del usuario registrado
+     * @throws MessagingException Si hay un error al enviar el correo de verificación
+     * @throws IllegalArgumentException Si los datos de registro son inválidos
+     */
     @Override
     public UserResponse registerUser(RegisterRequest request) throws MessagingException {
         if (request == null || request.getUsername().isEmpty() ||
                 request.getEmail().isEmpty() || request.getPassword().isEmpty()) {
-            throw new IllegalArgumentException(messageSource.getMessage("user.null"));
+            throw new IllegalArgumentException(messageUtil.getMessage("user.null"));
         }
+
 
         // Verificar si ya existe un usuario con ese email o username
         if (usersRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException(messageSource.getMessage("user.unique"));
+            throw new IllegalArgumentException(messageUtil.getMessage("user.unique"));
         }
 
         UsersEntity user = new UsersEntity();
-        setDTOtoUser(user, request, true);
+        setDTOtoUser(user, request);
         user.setEnabled(false);
 
         RolesEntity role = rolesRepository.findByRol("ROLE_USER")
@@ -117,15 +146,31 @@ public class AuthService implements IAuthService {
 
         user.setRoles(roles);
 
-        usersRepository.save(user);
+        user.setProfileImage(imgService.getImg(1L));
+
+
+        try {
+            usersRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            if(e.getMessage().contains("uk6dotkott2kjsp8vw4d0m25fb7")) {
+                throw new UniqueException(messageUtil.getMessage("user.unique"));
+            }
+            throw e;
+        }
 
         // Generar y enviar nuevo código
         codesService.generateCode(user, VerificationCodesService.CodeType.REGISTRATION);
 
-        UsersDTO usersDTO = setUserDTO(user);
+        UsersDTO usersDTO = convertToDTO(user);
         return new UserResponse(usersDTO);
     }
 
+    /**
+     * Verifica el correo electrónico de un usuario utilizando un código de verificación.
+     *
+     * @param request Solicitud de verificación con código proporcionado
+     * @throws IllegalStateException Si el código de verificación no es válido
+     */
     @Override
     @Transactional
     public void verifyEmail(VerificationRequest request) {
@@ -141,7 +186,14 @@ public class AuthService implements IAuthService {
         codesService.useCode(verificationCode);
     }
 
-
+    /**
+     * Inicia el proceso de recuperación de contraseña para un usuario.
+     * Genera un código de verificación para restablecer la contraseña.
+     *
+     * @param request Solicitud de recuperación con correo electrónico del usuario
+     * @throws MessagingException Si hay un error al enviar el correo de recuperación
+     * @throws UserNotFoundException Si no se encuentra el usuario
+     */
     @Override
     public void forgotPassword(ForgotPasswordRequest request) throws MessagingException {
         UsersEntity user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
@@ -153,6 +205,11 @@ public class AuthService implements IAuthService {
         codesService.generateCode(user, VerificationCodesService.CodeType.PASSWORD_RESET);
     }
 
+    /**
+     * Restablece la contraseña de un usuario utilizando un código de verificación.
+     *
+     * @param request Solicitud de restablecimiento con nuevo código y contraseña
+     */
     @Override
     public void resetPassword(ResetPasswordRequest request) {
         String code = request.getCode();
@@ -161,6 +218,14 @@ public class AuthService implements IAuthService {
         usersRepository.save(user);
     }
 
+    /**
+     * Reenvía un correo de validación a un usuario que aún no ha verificado su cuenta.
+     *
+     * @param request Solicitud de reenvío con correo electrónico
+     * @throws MessagingException Si hay un error al enviar el correo
+     * @throws UserNotFoundException Si no se encuentra el usuario
+     * @throws UserAlreadyEnabledException Si la cuenta ya está habilitada
+     */
     @Override
     public void resendValidatedEmail(ResendValidatedRequest request) throws MessagingException {
         UsersEntity user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
@@ -172,46 +237,18 @@ public class AuthService implements IAuthService {
         codesService.generateCode(user, VerificationCodesService.CodeType.REGISTRATION);
     }
 
-
-
     /**
-     * Convierte una entidad de usuario en un DTO de salida.
+     * Convierte una entidad de usuario en un DTO de transferencia de datos.
      *
-     * @param user La entidad de usuario a convertir.
-     * @return Un objeto OutUsersDTO con los datos del usuario.
+     * @param user Entidad de usuario a convertir
+     * @return DTO con información del usuario
      */
     private UsersDTO convertToDTO(UsersEntity user) {
-        UsersDTO dto = new UsersDTO();
-        dto.setIdUser(user.getIdUser());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-
-        Set<RolesEntity> userRoles = user.getRoles();
-        Set<String> roles = new HashSet<>();
-
-        for (RolesEntity role : userRoles) {
-            roles.add(role.getRol());
-        }
-
-        dto.setRol(roles);
-        if(user.getDateCreate() != null) {
-            dto.setDateCreated(LocalDate.from(user.getDateCreate()));
-        }
-        if(user.getDateModified() != null) {
-            dto.setDateModified(LocalDate.from(user.getDateModified()));
-        }
-
-        dto.setImageProfile(user.getProfileImage().getUrl());
-
-        return dto;
-    }
-
-    // Métodos privados
-    private UsersDTO setUserDTO(UsersEntity user) {
         UsersDTO usersDTO = new UsersDTO();
         usersDTO.setIdUser(user.getIdUser());
         usersDTO.setUsername(user.getUsername());
         usersDTO.setEmail(user.getEmail());
+        usersDTO.setEnabled(user.isEnabled());
 
         Set<RolesEntity> userRoles = user.getRoles();
         Set<String> roles = new HashSet<>();
@@ -229,36 +266,24 @@ public class AuthService implements IAuthService {
             usersDTO.setDateModified(LocalDate.from(user.getDateModified()));
         }
 
-
+        usersDTO.setImageProfile(user.getProfileImage().getUrl());
 
         return usersDTO;
     }
 
-    private void setDTOtoUser(UsersEntity user, RegisterRequest request, boolean isNew) {
+
+    /**
+     * Modifica un DTO de transferencia de datos en una entidad de usuario.
+     *
+     * @param user Entidad de usuario a convertir
+     * @param request Solicitud de registro de usuario
+     */
+    private void setDTOtoUser(UsersEntity user, RegisterRequest request) {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        if (isNew) {
-            user.setDateCreate(LocalDateTime.now());
-        } else {
-            user.setDateModified(LocalDateTime.now());
-        }
+        user.setDateCreate(LocalDateTime.now());
     }
 
-
-    @Override
-    public ResponseEntity<MessageResponse> validateToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new InvalidTokenException(messageSource.getMessage("token.null"));
-        }
-        String token = authHeader.substring(7);
-        boolean isValid = jwtUtil.validateToken(token);
-        if (isValid) {
-            return ResponseEntity.ok(new MessageResponse(messageSource.getMessage("token.valid")));
-        } else {
-            throw new InvalidTokenException(messageSource.getMessage("token.invalid"));
-        }
-    }
 
 }

@@ -4,6 +4,7 @@ import com.proyecto.mangareader.app.responses.error.ErrorResponse;
 import com.proyecto.mangareader.app.util.MessageUtil;
 import feign.FeignException;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -43,8 +44,16 @@ public class GlobalExceptionHandler {
     // Maneja excepciones generales
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
-        ErrorResponse response = new ErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse response = new ErrorResponse(messageSource.getMessage("error.back"), status.value(), LocalDateTime.now());
+
+        if( ex instanceof DataIntegrityViolationException) {
+            status = HttpStatus.CONFLICT;
+            response.setMessage(messageSource.getMessage("user.delete.error"));
+            response.setStatusCode(status.value());
+        }
+
+        return new ResponseEntity<>(response, status);
     }
     // InvalidAccessApiUsageException
 
@@ -114,12 +123,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(UserNotEnabledException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotEnabledException(UserNotEnabledException ex) {
-        ErrorResponse response = new ErrorResponse(messageSource.getMessage("user.not.enabled"), HttpStatus.FORBIDDEN.value(), LocalDateTime.now());
-        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-    }
-
     @ExceptionHandler(UserAlreadyEnabledException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyEnabledException(UserAlreadyEnabledException ex) {
         ErrorResponse response = new ErrorResponse(messageSource.getMessage("user.already.enabled"), HttpStatus.CONFLICT.value(), LocalDateTime.now() );
@@ -136,5 +139,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         ErrorResponse response =  new ErrorResponse(messageSource.getMessage("auth.error.credentials"), HttpStatus.UNAUTHORIZED.value(), LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(UserDeleteException.class)
+    public ResponseEntity<ErrorResponse> handleUserDeleteException(UserDeleteException ex) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 }

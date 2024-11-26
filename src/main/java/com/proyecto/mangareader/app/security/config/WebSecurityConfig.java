@@ -3,6 +3,8 @@ package com.proyecto.mangareader.app.security.config;
 import com.proyecto.mangareader.app.security.filter.JwtTokenFilter;
 import com.proyecto.mangareader.app.security.filter.PostgeSQLUserContextFilter;
 import com.proyecto.mangareader.app.security.service.CustomUserDetailsService;
+import com.proyecto.mangareader.app.util.MessageUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,11 +31,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfig {
     /**
-     * Proporciona el codificador de contraseñas para el sistema, usando BCrypt.
+     * Construcción de MessageUtil
+     */
+    private final MessageUtil messageUtil;
+    /**
+     * Proporciona un codificador de contraseñas usando el algoritmo BCrypt.
      *
-     * @return una instancia de PasswordEncoder para codificar contraseñas
+     * @return Instancia de PasswordEncoder para codificar contraseñas
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,14 +48,20 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Configura la cadena de filtros de seguridad de Spring, estableciendo la política de sesiones,
-     * los permisos de acceso y los filtros personalizados de autenticación y contexto de usuario.
+     * Configura la cadena de filtros de seguridad de Spring con configuraciones de seguridad integrales.
      *
-     * @param http instancia de HttpSecurity para configurar las opciones de seguridad
-     * @param postgeSQLUserContextFilter filtro personalizado para establecer el contexto de usuario en PostgreSQL
-     * @param jwtTokenFilter filtro para la autenticación basada en JWT
-     * @return una instancia de SecurityFilterChain con las configuraciones aplicadas
-     * @throws Exception si ocurre un error al configurar la seguridad HTTP
+     * Incluye:
+     * - Protección CSRF deshabilitada
+     * - Mapeos de solicitudes autorizadas
+     * - Gestión de sesión sin estado
+     * - Manejo personalizado de excepciones
+     * - Filtros de autenticación personalizados
+     *
+     * @param http Instancia de HttpSecurity para configurar opciones de seguridad
+     * @param postgeSQLUserContextFilter Filtro personalizado para establecer el contexto de usuario en PostgreSQL
+     * @param jwtTokenFilter Filtro de autenticación basado en JWT
+     * @return SecurityFilterChain configurado
+     * @throws Exception Si ocurre un error durante la configuración de seguridad HTTP
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -69,10 +81,9 @@ public class WebSecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/api/auth/**",
-                                "/api/user/forgot-password",
-                                "/api/user/reset-password",
                                 "/api/manga/**",
-                                "/api/img"
+                                "/api/img",
+                                "/api/reports/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -84,7 +95,7 @@ public class WebSecurityConfig {
                     response.setContentType("application/json");
                     response.getWriter().write(String.format(
                             "{\"message\":\"%s\",\"status\":%d}",
-                            "Acceso denegado: No tienes los permisos necesarios",
+                            messageUtil.getMessage("auth.error.access.denied"),
                             HttpStatus.UNAUTHORIZED.value()
                     ));
                 })
@@ -93,7 +104,7 @@ public class WebSecurityConfig {
                     response.setContentType("application/json");
                     response.getWriter().write(String.format(
                             "{\"message\":\"%s\",\"status\":%d}",
-                            "Acceso denegado: No tienes los permisos necesarios",
+                            messageUtil.getMessage("auth.error.access.denied"),
                             HttpStatus.FORBIDDEN.value()
                     ));
                 }));
@@ -107,9 +118,9 @@ public class WebSecurityConfig {
     /**
      * Configura el gestor de autenticación para el sistema.
      *
-     * @param authenticationConfiguration configuración de autenticación proporcionada por Spring
-     * @return una instancia de AuthenticationManager para gestionar la autenticación
-     * @throws Exception si ocurre un error al obtener el gestor de autenticación
+     * @param authenticationConfiguration Configuración de autenticación proporcionada por Spring
+     * @return AuthenticationManager configurado
+     * @throws Exception Si ocurre un error al obtener el gestor de autenticación
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -117,11 +128,12 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Define el proveedor de autenticación para el sistema, configurando el servicio de detalles del usuario
-     * y el codificador de contraseñas.
+     * Define el proveedor de autenticación para el sistema.
      *
-     * @param userDetailsService servicio para cargar detalles del usuario autenticado
-     * @return un proveedor de autenticación configurado
+     * Configura el servicio de detalles de usuario y codificación de contraseñas.
+     *
+     * @param userDetailsService Servicio para cargar detalles de usuario autenticado
+     * @return Proveedor de autenticación configurado
      */
     @Bean
     public AuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService) {
@@ -132,9 +144,9 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Define el servicio personalizado de detalles del usuario.
+     * Define el servicio personalizado de detalles de usuario.
      *
-     * @return una instancia de CustomUserDetailsService para la gestión de usuarios
+     * @return Instancia de CustomUserDetailsService para gestión de usuarios
      */
     @Bean
     public CustomUserDetailsService customUserDetailsService() {

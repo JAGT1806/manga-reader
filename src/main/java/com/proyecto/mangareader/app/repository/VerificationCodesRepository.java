@@ -14,15 +14,11 @@ import java.util.Optional;
 
 @Repository
 public interface VerificationCodesRepository extends JpaRepository<VerificationCodesEntity, Long> {
-    void deleteByUser(UsersEntity user);
-
     @Modifying
     @Query("DELETE FROM VerificationCodesEntity v WHERE v.expiryDate < :date")
     void deleteByExpiryDateBefore(LocalDateTime date);
 
     Optional<VerificationCodesEntity> findByCode(String code);
-
-    void deleteByUserAndCodeStartingWith(UsersEntity user, String prefix);
 
     @Query("SELECT v FROM VerificationCodesEntity v WHERE v.user = :user AND LENGTH(v.code) =:length ")
     Optional<List<VerificationCodesEntity>> findByUserAndCodeLength(@Param("user") UsersEntity user, @Param("length") int length);

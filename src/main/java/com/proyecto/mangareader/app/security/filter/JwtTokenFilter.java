@@ -1,12 +1,14 @@
 package com.proyecto.mangareader.app.security.filter;
 
 import com.proyecto.mangareader.app.security.util.JwtUtil;
+import com.proyecto.mangareader.app.util.MessageUtil;
 import com.proyecto.mangareader.app.security.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,34 +20,46 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Filtro que intercepta cada solicitud HTTP para validar y procesar un token JWT en el encabezado de autorización.
- * Si el token es válido, establece la autenticación en el contexto de seguridad de Spring.
+ * Filtro de seguridad JWT para autenticación y autorización de solicitudes HTTP.
+ *
+ * Responsabilidades:
+ * - Interceptar solicitudes entrantes
+ * - Validar tokens JWT
+ * - Establecer contexto de autenticación de Spring Security
+ *
  * @author Jhon Alexander Gómez Trujillo
+ * @since 2024
  */
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
-    /**
-     * Utilidad para la generación y validación de tokens JWT.
-     */
+    /** Utilidad para gestión de tokens JWT. */
     private final JwtUtil jwtUtil;
-    /**
-     * Servicio de detalles del usuario para cargar información del usuario autenticado.
-     */
+    /** Servicio para cargar detalles de usuario. */
     private final CustomUserDetailsService userDetailsService;
 
+    private MessageUtil messageUtil;
+
+    /** Constante para el encabezado de autorización. */
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    /** Prefijo para tokens Bearer. */
     private static final String BEARER_PREFIX = "Bearer ";
 
     /**
-     * Filtra cada solicitud para validar el token JWT presente en el encabezado de autorización.
-     * Si el token es válido y el usuario está habilitado, establece la autenticación en el contexto de seguridad de Spring.
+     * Procesa y valida el token JWT para cada solicitud entrante.
      *
-     * @param request el HttpServletRequest que contiene la solicitud del cliente
-     * @param response el HttpServletResponse para la respuesta al cliente
-     * @param filterChain la cadena de filtros para esta solicitud
-     * @throws ServletException si ocurre un error en el procesamiento de la solicitud
-     * @throws IOException si se detecta un error de entrada o salida al manejar la solicitud
+     * Pasos de procesamiento:
+     * - Extraer token del encabezado
+     * - Validar token
+     * - Cargar detalles de usuario
+     * - Verificar estado del usuario
+     * - Establecer autenticación en contexto de seguridad
+     *
+     * @param request Solicitud HTTP entrante
+     * @param response Respuesta HTTP
+     * @param filterChain Cadena de filtros de la solicitud
+     * @throws ServletException Error de procesamiento de solicitud
+     * @throws IOException Error de entrada/salida
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -59,7 +73,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                 if(!userDetails.isEnabled()) {
-                    throw new IllegalStateException("Usuario no validado");
+                    throw new IllegalStateException(messageUtil.getMessage("user.not.enabled"));
                 }
 
                 UsernamePasswordAuthenticationToken authentication =
@@ -76,11 +90,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Obtiene el token JWT de la solicitud HTTP.
-     * Verifica que el encabezado contenga el prefijo "Bearer" y extrae el token.
+     * Extrae el token JWT del encabezado de autorización.
      *
-     * @param request el HttpServletRequest que contiene la solicitud del cliente
-     * @return el token JWT si está presente y tiene el formato correcto; null en caso contrario
+     * @param request Solicitud HTTP
+     * @return Token JWT o null si no está presente
      */
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
@@ -90,25 +103,4 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /**
-     * Excluye rutas específicas del filtrado de autenticación con JWT.
-     * Las rutas relacionadas con documentación de API y ciertas rutas de autenticación no requieren autenticación.
-     *
-     * @param request el HttpServletRequest que contiene la solicitud del cliente
-     * @return true si la ruta debe excluirse del filtrado, false en caso contrario
-     */
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return path.startsWith("/api-docsss") ||
-                path.startsWith("/swagger-ui") ||
-                path.startsWith("/doc/swagger-ui") ||
-                path.startsWith("/swagger-resources") ||
-                path.startsWith("/webjars") ||
-                path.startsWith("/api/auth") ||
-                path.equals("/api/user/forgot-password") ||
-                path.equals("/api/user/reset-password") ||
-                path.equals("/api/img") ||
-                path.startsWith("/api/manga");
-    }
 }

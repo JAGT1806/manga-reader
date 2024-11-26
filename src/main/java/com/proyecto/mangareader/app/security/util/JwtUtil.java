@@ -20,28 +20,31 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Clase utilitaria para gestionar la generación, validación y extracción de datos de tokens JWT.
+ * Servicio de utilidad para gestión integral de tokens JWT.
+ *
+ * Características principales:
+ * - Generación de tokens
+ * - Validación de tokens
+ * - Extracción de claims
+ * - Manejo de configuraciones de seguridad
+ *
+ * @author Jhon Alexander Gómez Trujillo
  */
 @Component
 public class JwtUtil {
-    /**
-     * Clave secreta para firmar el token JWT, inyectada desde propiedades de configuración.
-     */
+    /** Clave secreta para firma de tokens, configurable por propiedades. */
     @Value("${jwt.secret:defaultSecretKey}")
     private String secretKey;
-    /**
-     * Tiempo de expiración del token JWT, inyectado desde propiedades de configuración.
-     */
+    /** Tiempo de expiración del token en milisegundos. */
     @Value("${jwt.expiration:864000000}") // 10 days in milliseconds
     private long jwtExpiration;
 
-    /**
-     * Llave para firmar los tokens generados.
-     */
+    /** Llave criptográfica para firmado de tokens. */
     private Key key;
 
     /**
-     * Método inicial para decodificar la clave secreta y generar la llave criptográfica.
+     * Inicializa la llave criptográfica tras la construcción del bean.
+     * Convierte la clave secreta en un formato seguro para firmado.
      */
     @PostConstruct
     public void init() {
@@ -49,12 +52,16 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-
     /**
-     * Genera un token JWT basado en los detalles del usuario.
+     * Genera token JWT con información de usuario.
      *
-     * @param userDetails detalles del usuario que serán incluidos en el token
-     * @return el token JWT generado
+     * Incluye:
+     * - Roles del usuario
+     * - ID de usuario
+     * - Estado de habilitación
+     *
+     * @param userDetails Detalles del usuario
+     * @return Token JWT generado
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -71,11 +78,11 @@ public class JwtUtil {
     }
 
     /**
-     * Crea el token JWT con los reclamos y el sujeto especificados.
+     * Crea token JWT firmado con claims específicos.
      *
-     * @param claims reclamos o información adicional que se incluirá en el token
-     * @param subject el sujeto (generalmente el nombre de usuario) al que se asocia el token
-     * @return el token JWT creado
+     * @param claims Información adicional del token
+     * @param subject Identificador principal (username)
+     * @return Token JWT firmado
      */
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
@@ -87,10 +94,10 @@ public class JwtUtil {
     }
 
     /**
-     * Extrae el nombre de usuario (sujeto) del token JWT.
+     * Extrae el nombre de usuario del token.
      *
-     * @param token el token JWT
-     * @return el nombre de usuario extraído del token
+     * @param token Token JWT
+     * @return Nombre de usuario
      */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -100,7 +107,7 @@ public class JwtUtil {
      * Extrae la fecha de expiración del token JWT.
      *
      * @param token el token JWT
-     * @return la fecha de expiración del token
+     * @return Fecha de expiración del token
      */
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
@@ -111,7 +118,7 @@ public class JwtUtil {
      *
      * @param token el token JWT
      * @param claimsResolver la función que define qué reclamo extraer
-     * @return el reclamo extraído
+     * @return Claim extraído
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
@@ -122,7 +129,7 @@ public class JwtUtil {
      * Extrae todos los reclamos del token JWT.
      *
      * @param token el token JWT
-     * @return todos los reclamos contenidos en el token
+     * @return Claims del token
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -133,10 +140,10 @@ public class JwtUtil {
     }
 
     /**
-     * Valida el token JWT verificando su firma.
+     * Valida la integridad y vigencia del token.
      *
-     * @param token el token JWT a validar
-     * @return {@code true} si el token es válido, de lo contrario {@code false}
+     * @param token Token JWT a validar
+     * @return Estado de validez del token
      */
     public boolean validateToken(String token) {
         try {

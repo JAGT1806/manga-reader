@@ -21,15 +21,43 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-
+/**
+ * Controlador REST para la gestión de usuarios en el sistema.
+ *
+ * Proporciona endpoints para realizar operaciones CRUD sobre usuarios,
+ * con mecanismos de seguridad y autorización implementados.
+ *
+ * @author Equipo de Desarrollo
+ * @version 1.0
+ * @since 2024
+ */
 @RestController
 @RequestMapping("/api/user")
 @AllArgsConstructor
-@Tag(name="users", description = "API para gestionar los usuarios")
-@CrossOrigin(origins = "http://localhost:4200")
+@Tag(name="Users", description = "API para gestionar los usuarios")
 public class UsersController {
+    /** Servicio para la gestión de operaciones de usuarios */
     private final IUsersService usersService;
 
+    /**
+     * Recupera usuarios con múltiples opciones de filtrado.
+     *
+     * Permite obtener usuarios filtrando por nombre de usuario, email,
+     * rol, estado y con paginación.
+     *
+     * @param username Filtro opcional por nombre de usuario
+     * @param email Filtro opcional por correo electrónico
+     * @param role Filtro opcional por rol (ROLE_ADMIN o ROLE_USER)
+     * @param offset Número de página para paginación (default 0)
+     * @param limit Número de elementos por página (default 10)
+     * @param enabled Filtro opcional por estado de habilitación
+     * @return Respuesta que contiene la lista de usuarios
+     *
+     * Códigos de respuesta HTTP:
+     * - 200: Usuarios encontrados exitosamente
+     * - 404: No se encontraron usuarios
+     * - 500: Error interno del servidor
+     */
     @Operation(summary = "Obtener usuarios", description = "Obtiene todos los usuarios")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuarios encontrados exitosamente",
@@ -51,11 +79,25 @@ public class UsersController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false, defaultValue = "0") int offset,
             @RequestParam(required = false, defaultValue = "10") int limit,
-            @RequestParam(required = false, defaultValue = "null") Boolean enabled ) {
+            @RequestParam(required = false) Boolean enabled ) {
         UserListResponse response = usersService.getAllUsers(username, email, role, offset, limit, enabled);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Recupera un usuario específico por su identificador.
+     *
+     * Permite obtener los detalles de un usuario. El acceso está restringido
+     * a administradores o al propio usuario.
+     *
+     * @param id Identificador único del usuario
+     * @return Respuesta con la información del usuario
+     *
+     * Códigos de respuesta HTTP:
+     * - 200: Usuario encontrado exitosamente
+     * - 404: Usuario no encontrado
+     * - 500: Error interno del servidor
+     */
     @Operation(summary = "Obtener un usuario por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario encontrado exitosamente",
@@ -92,6 +134,23 @@ public class UsersController {
             return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Actualiza la información de un usuario existente.
+     *
+     * Permite modificar los datos de un usuario. El acceso está restringido
+     * a administradores o al propio usuario.
+     *
+     * @param id Identificador del usuario a modificar
+     * @param request Datos actualizados del usuario
+     * @return Respuesta con el usuario modificado
+     *
+     * Códigos de respuesta HTTP:
+     * - 200: Usuario modificado exitosamente
+     * - 400: Argumentos inválidos
+     * - 404: Usuario no encontrado
+     * - 409: Conflicto con el email
+     * - 500: Error interno del servidor
+     */
     @Operation(summary = "Cambiar la contraseña de un usuario")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado exitosamente",
@@ -110,6 +169,20 @@ public class UsersController {
         return new ResponseEntity<>(new OkResponse(), HttpStatus.OK);
     }
 
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * Permite la eliminación de un usuario. El acceso está restringido
+     * a administradores o al propio usuario.
+     *
+     * @param id Identificador del usuario a eliminar
+     * @return Respuesta de confirmación de eliminación
+     *
+     * Códigos de respuesta HTTP:
+     * - 200: Usuario eliminado exitosamente
+     * - 404: Usuario no encontrado
+     * - 500: Error interno del servidor
+     */
     @Operation(summary = "Eliminar un usuario por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario modificado exitosamente",

@@ -19,19 +19,9 @@ public interface IUsersService {
 
      UserResponse getUserById(Long idUser);
 
-     UserResponse registerUser(RegisterRequest request) throws MessagingException;
-
-     void verifyEmail(VerificationRequest request);
-
-     void forgotPassword(ForgotPasswordRequest request) throws MessagingException;
-
-     void resetPassword(ResetPasswordRequest request);
-
      OkResponse deleteUser(Long id);
 
      UserResponse updateUser(Long id, UpdatedUserRequest request);
-
-     void resendValidatedEmail(ResendValidatedRequest request) throws MessagingException;
 
      void changePassword(Long id, ChangePasswordRequest request);
 }

@@ -19,25 +19,54 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Servicio para la gestión de códigos de verificación de usuarios.
+ *
+ * Maneja la generación, validación y limpieza de códigos de verificación
+ * para procesos como registro de usuarios y restablecimiento de contraseña.
+ * @author Jhon Alexander Gómez Trujillo
+ * @since 2024
+ */
 @Service
 @RequiredArgsConstructor
 public class VerificationCodesService implements IVerificationCodesService {
+    /** Repositorio para operaciones de códigos de verificación */
     private final VerificationCodesRepository codesRepository;
-    private final MessageUtil messageSource;
+    /** Utilidad para gestión de mensajes */
+    private final MessageUtil messageUtil;
+    /** Servicio de envío de correos electrónicos */
     private final IEmailService emailService;
 
+    /**
+     * Tiempo de expiración de códigos de verificación en horas
+     * Valor por defecto: 24 horas
+     */
     @Value("${token.verification.expiration:24}")
     private int verificationExpirationHours;
 
+    /**
+     * Tiempo de expiración de códigos de restablecimiento de contraseña en horas
+     * Valor por defecto: 1 hora
+     */
     @Value("${token.password.expiration:1}")
     private int passwordExpirationHours;
 
 
+    /**
+     * Tipos de códigos de verificación.
+     */
     public enum CodeType {
         REGISTRATION,
         PASSWORD_RESET
     }
 
+    /**
+     * Genera un nuevo código de verificación para un usuario.
+     *
+     * @param user Usuario para el que se genera el código
+     * @param codeType Tipo de código (registro o restablecimiento de contraseña)
+     * @throws MessagingException Si hay un error al enviar el correo electrónico
+     */
     @Override
     public void generateCode(UsersEntity user, CodeType codeType) throws MessagingException {
         deleteExistingCodes(user, codeType);
@@ -63,7 +92,7 @@ public class VerificationCodesService implements IVerificationCodesService {
             codesRepository.save(verificationCodes);
         } catch (DataIntegrityViolationException e) {
             if(e.getMessage().contains("ukpb2127rkh2td3y1mptij7slba")) {
-                throw new UniqueException(messageSource.getMessage("code.unique"));
+                throw new UniqueException(messageUtil.getMessage("code.unique"));
             }
             throw e;
         }
@@ -78,6 +107,14 @@ public class VerificationCodesService implements IVerificationCodesService {
 
     }
 
+    /**
+     * Recupera el usuario asociado a un código de verificación.
+     *
+     * @param code Código de verificación
+     * @param codeType Tipo de código
+     * @return Usuario asociado al código
+     * @throws IllegalArgumentException Si el código no es válido
+     */
     @Override
     public UsersEntity getUserByCode(String code, CodeType codeType) {
         VerificationCodesEntity verificationCode = getCode(code);
@@ -85,30 +122,49 @@ public class VerificationCodesService implements IVerificationCodesService {
         return verificationCode.getUser();
     }
 
+    /**
+     * Recupera la entidad de código de verificación.
+     *
+     * @param code Código de verificación
+     * @return Entidad de código de verificación
+     * @throws IllegalArgumentException Si el código no existe
+     */
     @Override
     public VerificationCodesEntity getCode(String code) {
         return codesRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(messageSource.getMessage("user.code.not.valid")));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("user.code.not.valid")));
     }
 
+    /**
+     * Valida un código de verificación.
+     *
+     * @param code Código de verificación a validar
+     * @param codeType Tipo de código esperado
+     * @throws IllegalArgumentException Si el código no es válido
+     */
     @Override
     public void validateCode(VerificationCodesEntity code, CodeType codeType) {
         if (code.isUsed()) {
             deleteCode(code);
-            throw new IllegalArgumentException(messageSource.getMessage("user.code.used"));
+            throw new IllegalArgumentException(messageUtil.getMessage("user.code.used"));
         }
 
         if((codeType == CodeType.REGISTRATION && code.getCode().length() != 6) ||
                 (codeType == CodeType.PASSWORD_RESET && code.getCode().length() != 7)) {
-            throw new IllegalArgumentException(messageSource.getMessage("user.code.not.valid"));
+            throw new IllegalArgumentException(messageUtil.getMessage("user.code.not.valid"));
         }
 
         if (LocalDateTime.now().isAfter(code.getExpiryDate())) {
             deleteCode(code);
-            throw new IllegalArgumentException(messageSource.getMessage("user.code.expired"));
+            throw new IllegalArgumentException(messageUtil.getMessage("user.code.expired"));
         }
     }
 
+    /**
+     * Marca un código de verificación como usado.
+     *
+     * @param code Código de verificación a marcar
+     */
     @Override
     @Transactional
     public void useCode(VerificationCodesEntity code) {
@@ -117,6 +173,12 @@ public class VerificationCodesService implements IVerificationCodesService {
         deleteCode(code);
     }
 
+    /**
+     * Elimina códigos de verificación existentes para un usuario.
+     *
+     * @param user Usuario
+     * @param codeType Tipo de código
+     */
     private void deleteExistingCodes(UsersEntity user, CodeType codeType) {
         List<VerificationCodesEntity> existingCodes;
         if (codeType == CodeType.REGISTRATION) {
@@ -127,10 +189,19 @@ public class VerificationCodesService implements IVerificationCodesService {
         codesRepository.deleteAll(existingCodes);
     }
 
+    /**
+     * Elimina un código de verificación específico.
+     *
+     * @param code Código de verificación a eliminar
+     */
     private void deleteCode(VerificationCodesEntity code) {
         codesRepository.delete(code);
     }
 
+    /**
+     * Tarea programada para limpiar códigos de verificación expirados.
+     * Se ejecuta cada hora en punto.
+     */
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void cleanupExpiredCodes() {

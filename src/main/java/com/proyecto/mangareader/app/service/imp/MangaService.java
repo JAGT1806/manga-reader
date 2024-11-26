@@ -17,13 +17,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * Servicio para gestionar operaciones de manga.
+ * Implementa la interfaz IMangaService para interactuar con un cliente de manga externo.
+ *
+ * Características principales:
+ * - Filtrado de contenido por clasificación (seguro, sugerente, adulto)
+ * - Soporte multilenguaje
+ * - Conversión de respuestas de API a DTOs
+ * @author Jhon Alexander Gómez Trujillo
+ * @since 2024
+ */
 @Service
 @AllArgsConstructor
 public class MangaService implements IMangaService {
+    /** Cliente para interactuar con la API externa de manga. */
     private final IMangaClient imangaClient;
+
+    /** Constante para incluir arte de portada en las solicitudes. */
     private static final String INCLUDES = "cover_art";
 
+    /**
+     * Lista mangas según los criterios de búsqueda proporcionados.
+     *
+     * @param tile Título o parte del título a buscar
+     * @param offset Desplazamiento para paginación
+     * @param limit Número máximo de resultados
+     * @param nsfw Incluir contenido para adultos
+     * @param language Idioma de los resultados
+     * @return Lista de mangas que coinciden con los criterios
+     */
     @Override
     public ListMangasResponse listMangas(String tile, int offset, int limit, boolean nsfw, String language) {
         List<String> contentRatingFilters = new ArrayList<>();
@@ -43,6 +66,15 @@ public class MangaService implements IMangaService {
         return convertToListMangaResponse(params, offset, limit, language);
     }
 
+    /**
+     * Convierte la respuesta de la API en un objeto ListMangasResponse.
+     *
+     * @param params Respuesta de la API
+     * @param offset Desplazamiento de paginación
+     * @param limit Límite de resultados
+     * @param language Idioma de los resultados
+     * @return Respuesta de manga procesada
+     */
     private ListMangasResponse convertToListMangaResponse(Map<String, Object> params, int offset, int limit, String language) {
         List<Map<String, Object>> mangaList = (List<Map<String, Object>>) params.get("data");
 
@@ -83,12 +115,26 @@ public class MangaService implements IMangaService {
         return listMangasResponse;
     }
 
+    /**
+     * Obtiene los detalles de un manga específico por su ID.
+     *
+     * @param id Identificador único del manga
+     * @param language Idioma de los detalles
+     * @return Detalles completos del manga
+     */
     @Override
     public MangaResponse getManga(String id, String language) {
         Map<String, Object> params = imangaClient.getManga(id, INCLUDES);
         return convertToMangaResponse(params, language);
     }
 
+    /**
+     * Convierte la respuesta de la API de un manga en un objeto MangaResponse.
+     *
+     * @param params Respuesta de la API
+     * @param language Idioma de los detalles
+     * @return Respuesta de manga procesada
+     */
     public MangaResponse convertToMangaResponse(Map<String, Object> params, String language) {
         Map<String, Object> manga = (Map<String, Object>) params.get("data");
 
@@ -119,7 +165,16 @@ public class MangaService implements IMangaService {
     }
 
 
-
+    /**
+     * Busca los capítulos (feed) de un manga específico.
+     *
+     * @param id Identificador del manga
+     * @param offset Desplazamiento para paginación
+     * @param limit Número máximo de capítulos
+     * @param nsfw Incluir contenido para adultos
+     * @param language Idioma de los capítulos
+     * @return Feed de capítulos del manga
+     */
     @Override
     public FeedMangaResponse searchFeed(String id, int offset, int limit, boolean nsfw, String language) {
         List<String> contentRatingFilters = new ArrayList<>();
@@ -139,6 +194,14 @@ public class MangaService implements IMangaService {
         return convertToFeedMangaResponse(params, offset, limit);
     }
 
+    /**
+     * Convierte la respuesta de la API del feed de manga en un objeto FeedMangaResponse.
+     *
+     * @param params Respuesta de la API
+     * @param offset Desplazamiento de paginación
+     * @param limit Límite de resultados
+     * @return Respuesta de feed de manga procesada
+     */
     private FeedMangaResponse convertToFeedMangaResponse(Map<String, Object> params, int offset, int limit) {
         List<Map<String, Object>> feedManga = (List<Map<String, Object>>) params.get("data");
 
@@ -175,6 +238,13 @@ public class MangaService implements IMangaService {
         return feedMangaResponse;
     }
 
+    /**
+     * Configura los idiomas disponibles para la traducción.
+     * Añade soporte específico para español latino.
+     *
+     * @param language Idioma principal
+     * @param availableTranslatedLanguage Lista de idiomas disponibles
+     */
     private void setAvailableTranslatedLanguage(String language, List<String> availableTranslatedLanguage) {
         availableTranslatedLanguage.add(language);
 
@@ -185,12 +255,26 @@ public class MangaService implements IMangaService {
     }
 
 
+    /**
+     * Obtiene las URLs de las páginas de un capítulo de manga.
+     *
+     * @param id Identificador del capítulo
+     * @return Respuesta con URLs de páginas del capítulo
+     */
+
     @Override
     public ChapterMangaResponse getChapterManga(String id) {
         Map<String, Object> params = imangaClient.getMangaAtHome(id);
         return convertToChapterMangaResponse(params);
     }
 
+    /**
+     * Convierte la respuesta de la API de un capítulo en un objeto ChapterMangaResponse.
+     * Genera URLs completas para las imágenes del capítulo.
+     *
+     * @param params Respuesta de la API con datos del capítulo
+     * @return Respuesta de capítulo procesada con URLs de páginas
+     */
     public ChapterMangaResponse convertToChapterMangaResponse(Map<String, Object> params) {
         ChapterMangaResponse chapterMangaResponse = new ChapterMangaResponse();
 

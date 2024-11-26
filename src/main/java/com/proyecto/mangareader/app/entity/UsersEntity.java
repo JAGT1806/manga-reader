@@ -43,6 +43,7 @@ public class UsersEntity {
     @JoinColumn(name = "profile_image_id")
     private ImgEntity profileImage;
 
+
     @ManyToMany
     @JoinTable(
             name = "user_roles",
