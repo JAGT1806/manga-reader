@@ -16,12 +16,12 @@ Anteriormente dicho, este proyecto cuenta con un sistema de ficheros monolito, s
 
 - Java 21
 - Maven
-- PostgreSQL 17
+- PostgreSQL 16
 
 ## Puertos del proyecto
 
-- Proyecto en general: 8080
-- PostgreSQL: 5433 (Por defecto para este servicio es el puerto 5432)}
+- Proyecto del proyecto: 9000
+- PostgreSQL: 5432 
 
 ## Dependencias del proyecto
 
@@ -132,8 +132,8 @@ FOR EACH ROW EXECUTE FUNCTION audit_trigger_function();
 
 
 -- Inserción de imagen por defecto
-INSERT INTO img (url, anime)  
-VALUES ('https://i.ibb.co/WfP4Wv0/585e4beacb11b227491c3399.png', 'Default Profile Image')  
+INSERT INTO img (url)  
+VALUES ('https://i.ibb.co/WfP4Wv0/585e4beacb11b227491c3399.png')  
 ON CONFLICT DO NOTHING;
 
 -- Inserción inicial de roles
@@ -153,7 +153,7 @@ INSERT INTO users (
 SELECT  
     'admin',  
     'admin@mangareader.com',  
-    '$2a$10$st4YvGfdaVAhnExpAeWH6eSZP.cqHoWu8GCFP9GlRiD6IpwNWFcTO',
+    -- '$2a$10$st4YvGfdaVAhnExpAeWH6eSZP.cqHoWu8GCFP9GlRiD6IpwNWFcTO',
     -- Asegúrate de cambiar esto por la contraseña hasheada real
 	'$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 
 	-- En este caso se usará 'admin123'
@@ -187,3 +187,6 @@ $$ LANGUAGE plpgsql;
 ## Documentación del proyecto
 
 Toda la documentación del proyecto se podrán encontrar en el swagger dentro del mismo proyecto con la ruta de http://localhost:8080/doc/swagger-ui.html.
+
+Además de poder observar el resto de documentación en los javadocs.
+
