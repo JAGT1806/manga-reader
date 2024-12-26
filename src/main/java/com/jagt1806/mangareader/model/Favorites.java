@@ -1,5 +1,8 @@
 package com.jagt1806.mangareader.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jagt1806.mangareader.audit.auxiliary.Auditable;
+import com.jagt1806.mangareader.audit.listener.AuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +15,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "favorites", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "manga_id"})
 })
-public class Favorites {
+@EntityListeners(AuditListener.class)
+public class Favorites implements Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,4 +32,9 @@ public class Favorites {
 
     private String urlImage;
 
+    @JsonIgnore
+    @Override
+    public String getTableName() {
+        return "users";
+    }
 }

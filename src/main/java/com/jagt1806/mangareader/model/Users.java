@@ -2,6 +2,8 @@ package com.jagt1806.mangareader.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jagt1806.mangareader.audit.auxiliary.Auditable;
+import com.jagt1806.mangareader.audit.listener.AuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,7 +18,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class Users {
+@EntityListeners(AuditListener.class)
+public class Users implements Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -53,4 +56,10 @@ public class Users {
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @JsonIgnore
+    @Override
+    public String getTableName() {
+        return "users";
+    }
 }
