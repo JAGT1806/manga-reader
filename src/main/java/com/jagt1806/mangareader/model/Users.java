@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,6 +46,7 @@ public class Users implements Auditable {
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "profile_image_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Img profileImage;
 
     @ManyToMany
