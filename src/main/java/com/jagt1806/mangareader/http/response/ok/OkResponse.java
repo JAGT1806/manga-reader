@@ -1,4 +1,4 @@
-package com.jagt1806.mangareader.response.ok;
+package com.jagt1806.mangareader.http.response.ok;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

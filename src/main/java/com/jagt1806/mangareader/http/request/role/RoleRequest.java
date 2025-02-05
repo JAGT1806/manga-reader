@@ -1,4 +1,4 @@
-package com.jagt1806.mangareader.request.img;
+package com.jagt1806.mangareader.http.request.role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImgRequest {
-    private String url;
+public class RoleRequest {
+    private String role;
 }

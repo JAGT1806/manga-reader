@@ -1,8 +1,8 @@
 package com.jagt1806.mangareader.service;
 
 import com.jagt1806.mangareader.model.Roles;
-import com.jagt1806.mangareader.request.role.RoleRequest;
-import com.jagt1806.mangareader.response.role.RoleListResponse;
+import com.jagt1806.mangareader.http.request.role.RoleRequest;
+import com.jagt1806.mangareader.http.response.role.RoleListResponse;
 
 public interface RoleService {
     RoleListResponse getAllRoles(String role, int offset, int limit);

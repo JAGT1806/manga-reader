@@ -1,6 +1,6 @@
 package com.jagt1806.mangareader.exceptions;
 
-import com.jagt1806.mangareader.response.error.ErrorResponse;
+import com.jagt1806.mangareader.http.response.error.ErrorResponse;
 import com.jagt1806.mangareader.util.MessageUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

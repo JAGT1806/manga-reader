@@ -1,4 +1,4 @@
-package com.jagt1806.mangareader.response.error;
+package com.jagt1806.mangareader.http.response.error;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

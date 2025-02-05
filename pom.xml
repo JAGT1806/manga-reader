@@ -15,7 +15,12 @@
     <description>manga-reader</description>
     <url/>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/MIT</url>
+            <distribution>repo</distribution>
+            <comments>Copyright (c) 2025 JAGT1806</comments>
+        </license>
     </licenses>
     <developers>
         <developer/>
@@ -88,6 +93,11 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.11.5</version>
             <scope>runtime</scope>
+        </dependency>
+        <!-- Java Mail Sender -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <!-- Test -->
         <dependency>

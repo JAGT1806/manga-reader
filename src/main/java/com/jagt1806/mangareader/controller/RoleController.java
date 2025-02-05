@@ -1,10 +1,10 @@
 package com.jagt1806.mangareader.controller;
 
 import com.jagt1806.mangareader.model.Roles;
-import com.jagt1806.mangareader.request.role.RoleRequest;
-import com.jagt1806.mangareader.response.error.ErrorResponse;
-import com.jagt1806.mangareader.response.ok.OkResponse;
-import com.jagt1806.mangareader.response.role.RoleListResponse;
+import com.jagt1806.mangareader.http.request.role.RoleRequest;
+import com.jagt1806.mangareader.http.response.error.ErrorResponse;
+import com.jagt1806.mangareader.http.response.ok.OkResponse;
+import com.jagt1806.mangareader.http.response.role.RoleListResponse;
 import com.jagt1806.mangareader.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

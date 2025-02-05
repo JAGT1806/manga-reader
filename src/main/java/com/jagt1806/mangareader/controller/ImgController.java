@@ -1,10 +1,10 @@
 package com.jagt1806.mangareader.controller;
 
 import com.jagt1806.mangareader.model.Img;
-import com.jagt1806.mangareader.request.img.ImgRequest;
-import com.jagt1806.mangareader.response.error.ErrorResponse;
-import com.jagt1806.mangareader.response.img.ImgListResponse;
-import com.jagt1806.mangareader.response.ok.OkResponse;
+import com.jagt1806.mangareader.http.request.img.ImgRequest;
+import com.jagt1806.mangareader.http.response.error.ErrorResponse;
+import com.jagt1806.mangareader.http.response.img.ImgListResponse;
+import com.jagt1806.mangareader.http.response.ok.OkResponse;
 import com.jagt1806.mangareader.service.ImgService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,8 +50,8 @@ public class ImgController {
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{id}")
-    public Img getImg(@PathVariable Long id) {
-        return imgService.getById(id);
+    public ResponseEntity<Img> getImg(@PathVariable Long id) {
+        return ResponseEntity.ok(imgService.getById(id));
     }
 
     @Operation(summary = "Crear imagen", description = "Añade una nueva imagen al sistema")
