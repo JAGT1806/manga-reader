@@ -21,12 +21,12 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CustomUsersDetailsService implements UserDetailsService {
-    private UsersRepository usersRepository;
+    private final UsersRepository usersRepository;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UserNotFoundException {
-        Users user = usersRepository.findByEmail(email.toUpperCase()).orElseThrow(() -> new UserNotFoundException(null));
+        Users user = usersRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
 
         List<GrantedAuthority> authorities = getUserAuthority(user.getRoles());
 

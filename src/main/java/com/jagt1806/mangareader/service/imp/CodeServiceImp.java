@@ -7,6 +7,7 @@ import com.jagt1806.mangareader.repository.CodesRepository;
 import com.jagt1806.mangareader.service.CodeService;
 import com.jagt1806.mangareader.service.EmailService;
 import com.jagt1806.mangareader.util.MessageUtil;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +37,7 @@ public class CodeServiceImp implements CodeService {
     }
 
     @Override
-    public void generateCode(Users user, CodeType codeType)  {
+    public void generateCode(Users user, CodeType codeType) throws MessagingException {
         deleteExistingCodes(user, codeType);
 
         String code;

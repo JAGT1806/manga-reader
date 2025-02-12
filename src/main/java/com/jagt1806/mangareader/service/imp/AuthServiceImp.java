@@ -17,6 +17,7 @@ import com.jagt1806.mangareader.service.AuthService;
 import com.jagt1806.mangareader.service.CodeService;
 import com.jagt1806.mangareader.service.ImgService;
 import com.jagt1806.mangareader.util.MessageUtil;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,15 +58,15 @@ public class AuthServiceImp implements AuthService {
             throw new IllegalStateException(messageUtil.getMessage("user.not.enabled"));
 
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        CustomUserDetails userDetails = (CustomUserDetails) usersDetailsService.loadUserByUsername(request.getEmail());
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail().toLowerCase(), request.getPassword()));
+        CustomUserDetails userDetails = (CustomUserDetails) usersDetailsService.loadUserByUsername(request.getEmail().toLowerCase());
         String jwt = jwtUtil.generateToken(userDetails);
 
         return new LoginResponse("Bearer", jwt);
     }
 
     @Override
-    public void registerUser(RegisterRequest request) {
+    public void registerUser(RegisterRequest request) throws MessagingException {
         if (request == null || request.getUsername().isEmpty() ||
                 request.getEmail().isEmpty() || request.getPassword().isEmpty())
             throw new IllegalArgumentException(messageUtil.getMessage("user.null"));
@@ -118,7 +119,7 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public void forgotPassword(CodeRequest request) {
+    public void forgotPassword(CodeRequest request) throws MessagingException {
         Users user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
 
         if(!user.isEnabled()) {
@@ -137,7 +138,7 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public void resendValidatedEmail(CodeRequest request) {
+    public void resendValidatedEmail(CodeRequest request) throws MessagingException {
         Users user = usersRepository.findByEmail(request.getEmail().toLowerCase()).orElseThrow(() -> new UserNotFoundException(null));
 
         if(user.isEnabled()) {

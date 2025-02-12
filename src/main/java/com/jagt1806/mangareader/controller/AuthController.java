@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,7 +66,7 @@ public class AuthController {
             )
     })
     @PostMapping("/register")
-    public ResponseEntity<OkResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<OkResponse> register(@RequestBody RegisterRequest request) throws MessagingException {
         authService.registerUser(request);
         return new ResponseEntity<>(new OkResponse(), HttpStatus.CREATED);
     }
@@ -106,7 +107,7 @@ public class AuthController {
             )
     })
     @PostMapping("/forgot-password")
-    public ResponseEntity<OkResponse> forgotPassword(@RequestBody CodeRequest request) {
+    public ResponseEntity<OkResponse> forgotPassword(@RequestBody CodeRequest request) throws MessagingException {
         authService.forgotPassword(request);
         return ResponseEntity.ok(new OkResponse());
     }
@@ -146,7 +147,7 @@ public class AuthController {
             )
     })
     @PostMapping("/resend-activate")
-    public ResponseEntity<OkResponse> resendActivate(@RequestBody CodeRequest request) {
+    public ResponseEntity<OkResponse> resendActivate(@RequestBody CodeRequest request) throws MessagingException {
         authService.resendValidatedEmail(request);
         return ResponseEntity.ok(new OkResponse());
     }

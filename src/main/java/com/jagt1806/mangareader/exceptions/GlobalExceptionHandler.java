@@ -2,6 +2,7 @@ package com.jagt1806.mangareader.exceptions;
 
 import com.jagt1806.mangareader.http.response.error.ErrorResponse;
 import com.jagt1806.mangareader.util.MessageUtil;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        ErrorResponse response = new ErrorResponse(messageUtil.getMessage("error.back"), status.value(), LocalDateTime.now());
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("error.back"),
+                status.value(),
+                LocalDateTime.now());
 
         return new ResponseEntity<>(response, status);
     }
@@ -54,14 +58,39 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ImgNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleImgNotFoundException(ImgNotFoundException ex) {
-        ErrorResponse response = new ErrorResponse(messageUtil.getMessage("img.not.found"), HttpStatus.NOT_FOUND.value(), LocalDateTime.now());
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("img.not.found"),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MessagingException.class)
+    public ResponseEntity<ErrorResponse> handleMessagingException(MessagingException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("email.error"),
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        ErrorResponse response = new ErrorResponse(messageUtil.getMessage("error.invalid.id", new Object[]{ex.getValue(), ex.getName()}), HttpStatus.BAD_REQUEST.value(), LocalDateTime.now());
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("error.invalid.id", new Object[]{ex.getValue(), ex.getName()}),
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRoleNotFoundException(RoleNotFoundException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("role.not.found"),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UniqueException.class)
@@ -74,6 +103,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserAlreadyEnabledException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyEnabledException(UserAlreadyEnabledException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("user.already.enabled"),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserNotEnabledException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotEnabledException(UserNotEnabledException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("user.not.enabled"),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
         ErrorResponse response = new ErrorResponse(
@@ -84,13 +133,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(RoleNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleRoleNotFoundException(RoleNotFoundException ex) {
-        ErrorResponse response = new ErrorResponse(
-                messageUtil.getMessage("role.not.found"),
-                HttpStatus.NOT_FOUND.value(),
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
+
+
 }
