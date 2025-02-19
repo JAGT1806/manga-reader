@@ -52,7 +52,7 @@ public class AuthServiceImp implements AuthService {
     @Override
     public LoginResponse login(LoginRequest request) {
         Users user = usersRepository.findByEmail(request.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException(messageUtil.getMessage("user.not.found")));
+                .orElseThrow(() -> new UserNotFoundException(messageUtil.getMessage("user.not.found")));
 
         if(!user.isEnabled())
             throw new IllegalStateException(messageUtil.getMessage("user.not.enabled"));

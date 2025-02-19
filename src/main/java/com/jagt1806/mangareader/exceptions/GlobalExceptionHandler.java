@@ -2,11 +2,14 @@ package com.jagt1806.mangareader.exceptions;
 
 import com.jagt1806.mangareader.http.response.error.ErrorResponse;
 import com.jagt1806.mangareader.util.MessageUtil;
+import feign.FeignException;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -23,10 +26,21 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorResponse response = new ErrorResponse(
                 messageUtil.getMessage("error.back"),
+                // "Mensaje: " + ex.getMessage() + " Error:" + ex.getCause(),
                 status.value(),
                 LocalDateTime.now());
 
         return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("auth.error.credentials"),
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
@@ -37,6 +51,15 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(FeignException ex) {
+        ErrorResponse response = new ErrorResponse(
+                messageUtil.getMessage("feign.error"),
+                HttpStatus.BAD_GATEWAY.value(),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.BAD_GATEWAY);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -52,7 +75,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex) {
-        ErrorResponse response = new ErrorResponse(ex.getMessage(), HttpStatus.CONFLICT.value(), LocalDateTime.now());
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
