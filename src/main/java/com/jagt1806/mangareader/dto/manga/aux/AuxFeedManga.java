@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class AuxFeedManga {
     private String volume;
     private String chapter;
-    private String tittle;
+    private String title;
     private String language;
     private int pages;
 }

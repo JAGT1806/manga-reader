@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.jagt1806</groupId>
-    <artifactId>mangaData-reader</artifactId>
+    <artifactId>manga-reader</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>mangaData-reader</name>
-    <description>mangaData-reader</description>
+    <name>manga-reader</name>
+    <description>manga-reader</description>
     <url/>
     <licenses>
         <license>
