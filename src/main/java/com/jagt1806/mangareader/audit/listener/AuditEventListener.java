@@ -31,83 +31,84 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class AuditEventListener {
-    private final AuditRepository auditRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .registerModule(new JavaTimeModule());
+  private final AuditRepository auditRepository;
+  private final ObjectMapper objectMapper = new ObjectMapper()
+      .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+      .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+      .registerModule(new JavaTimeModule());
 
-    @Async
-    @EventListener
-    public void handleAuditEvent(AuditEvent event) {
-        try {
-            Audit audits = new Audit();
-            audits.setAction(event.action());
-            audits.setTableName( ((Auditable) event.data()).getTableName() );
+  @Async
+  @EventListener
+  public void handleAuditEvent(AuditEvent event) {
+    try {
+      Audit audits = new Audit();
+      audits.setAction(event.action());
+      audits.setTableName(((Auditable) event.data()).getTableName());
 
-            audits.setData(convertToJsonString(event.data()));
-            audits.setTimestamp(LocalDateTime.now());
+      audits.setData(convertToJsonString(event.data()));
+      audits.setTimestamp(LocalDateTime.now());
 
-            // Obtener usuario actual
-            CustomUserDetails userDetails = (CustomUserDetails) Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                    .map(Authentication::getPrincipal)
-                    .filter(principal -> principal instanceof CustomUserDetails)
-                    .orElse(null);
+      // Obtener usuario actual
+      CustomUserDetails userDetails = (CustomUserDetails) Optional
+          .ofNullable(SecurityContextHolder.getContext().getAuthentication())
+          .map(Authentication::getPrincipal)
+          .filter(principal -> principal instanceof CustomUserDetails)
+          .orElse(null);
 
-            if (userDetails != null) {
-                audits.setUserId(userDetails.getId());
-                audits.setUserEmail(userDetails.getUsername());
-            } else {
-                audits.setUserId(null);
-                audits.setUserEmail("system");
-            }
+      if (userDetails != null) {
+        audits.setUserId(userDetails.getId());
+        audits.setUserEmail(userDetails.getUsername());
+      } else {
+        audits.setUserId(null);
+        audits.setUserEmail("system");
+      }
 
-            System.out.println("Audit: " + audits);
-
-            auditRepository.save(audits);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+      auditRepository.save(audits);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
     }
+  }
 
-    private String convertToJsonString(Object obj) {
-        try {
-            if(obj == null) return null;
+  private String convertToJsonString(Object obj) {
+    try {
+      if (obj == null)
+        return null;
 
-            Map<String, Object> result = new HashMap<>();
+      Map<String, Object> result = new HashMap<>();
 
-            for(Field field : obj.getClass().getDeclaredFields()) {
-                field.setAccessible(true);
+      for (Field field : obj.getClass().getDeclaredFields()) {
+        field.setAccessible(true);
 
-                if(field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
-                    Object relatedEntity = field.get(obj);
-                    result.put(field.getName(), getEntityId(relatedEntity));
-                } else if(field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToMany.class)) {
-                    Collection<?> relatedEntities = (Collection<?>) field.get(obj);
-                    result.put(field.getName(), relatedEntities.stream().map(this::getEntityId).toList());
-                } else {
-                    result.put(field.getName(), field.get(obj));
-                }
-            }
-
-            JsonNode jsonNode = objectMapper.valueToTree(result);
-
-            return objectMapper.writeValueAsString(jsonNode);
-        }catch (Exception e) {
-            return null;
+        if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
+          Object relatedEntity = field.get(obj);
+          result.put(field.getName(), getEntityId(relatedEntity));
+        } else if (field.isAnnotationPresent(OneToMany.class) || field.isAnnotationPresent(ManyToMany.class)) {
+          Collection<?> relatedEntities = (Collection<?>) field.get(obj);
+          result.put(field.getName(), relatedEntities.stream().map(this::getEntityId).toList());
+        } else {
+          result.put(field.getName(), field.get(obj));
         }
-    }
+      }
 
-    private Object getEntityId(Object data) {
-        if(data == null) return null;
+      JsonNode jsonNode = objectMapper.valueToTree(result);
 
-        try {
-            Field idField = data.getClass().getDeclaredField("id");
-            idField.setAccessible(true);
-            return idField.get(data);
-        } catch (Exception e) {
-            return null;
-        }
+      return objectMapper.writeValueAsString(jsonNode);
+    } catch (Exception e) {
+      return null;
     }
+  }
+
+  private Object getEntityId(Object data) {
+    if (data == null)
+      return null;
+
+    try {
+      Field idField = data.getClass().getDeclaredField("id");
+      idField.setAccessible(true);
+      return idField.get(data);
+    } catch (Exception e) {
+      return null;
+    }
+  }
 }
