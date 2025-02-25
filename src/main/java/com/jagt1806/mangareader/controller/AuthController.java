@@ -27,19 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
-    @Operation(summary = "Inicio de sesión de usuario", description = "Autentica un usuario con email y contraseña"
-    )
+    @Operation(summary = "Inicio de sesión de usuario", description = "Autentica un usuario con email y contraseña")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = LoginResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "401", description = "Credenciales inválidas",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -47,23 +42,18 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Registrar nuevo usuario", description = "Crea un nuevo usuario deshabilitado en el sistema"
-    )
+    @Operation(summary = "Registrar nuevo usuario", description = "Crea un nuevo usuario deshabilitado en el sistema")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
                     description = "Usuario creado exitosamente",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = OkResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(
                     responseCode = "400",
                     description = "Datos de usuario inválidos",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
     public ResponseEntity<OkResponse> register(@RequestBody RegisterRequest request) throws MessagingException {
@@ -71,19 +61,14 @@ public class AuthController {
         return new ResponseEntity<>(new OkResponse(), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Activar usuario", description = "Activa la cuenta de usuario mediante un código"
-    )
+    @Operation(summary = "Activar usuario", description = "Activa la cuenta de usuario mediante un código")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario activado exitosamente",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = OkResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(responseCode = "400", description = "Código de activación inválido",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/activate")
     public ResponseEntity<OkResponse> activateAccount(
@@ -92,19 +77,14 @@ public class AuthController {
         return ResponseEntity.ok(new OkResponse());
     }
 
-    @Operation(summary = "Recuperar contraseña", description = "Envía un código de recuperación al correo electrónico"
-    )
+    @Operation(summary = "Recuperar contraseña", description = "Envía un código de recuperación al correo electrónico")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Código de recuperación enviado",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = OkResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(responseCode = "400", description = "Email no registrado",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/forgot-password")
     public ResponseEntity<OkResponse> forgotPassword(@RequestBody CodeRequest request) throws MessagingException {
@@ -112,19 +92,14 @@ public class AuthController {
         return ResponseEntity.ok(new OkResponse());
     }
 
-    @Operation(summary = "Restablecer contraseña", description = "Cambia la contraseña usando un código de recuperación"
-    )
+    @Operation(summary = "Restablecer contraseña", description = "Cambia la contraseña usando un código de recuperación")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Contraseña restablecida exitosamente",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = OkResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(responseCode = "400", description = "Código de recuperación inválido",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/reset-password")
     public ResponseEntity<OkResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
@@ -132,19 +107,14 @@ public class AuthController {
         return ResponseEntity.ok(new OkResponse());
     }
 
-    @Operation(summary = "Reenviar código de verificación", description = "Reenvía el código de confirmación de registro"
-    )
+    @Operation(summary = "Reenviar código de verificación", description = "Reenvía el código de confirmación de registro")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Código reenviado exitosamente",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = OkResponse.class)
-                    )
-            ),
+                            schema = @Schema(implementation = OkResponse.class))),
             @ApiResponse(responseCode = "400", description = "Cuenta no encontrada",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            )
+                            schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/resend-activate")
     public ResponseEntity<OkResponse> resendActivate(@RequestBody CodeRequest request) throws MessagingException {

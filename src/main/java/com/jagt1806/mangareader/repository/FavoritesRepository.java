@@ -1,6 +1,5 @@
 package com.jagt1806.mangareader.repository;
 
-import com.jagt1806.mangareader.dto.favorite.FavoriteDTO;
 import com.jagt1806.mangareader.model.Favorites;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

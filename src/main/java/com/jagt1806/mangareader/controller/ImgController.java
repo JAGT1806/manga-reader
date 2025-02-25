@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -63,6 +65,8 @@ public class ImgController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @SecurityRequirement(name = "Auth")
+    @PreAuthorize("hasAuthority('${app.admin.role}')")
     @PostMapping
     public ResponseEntity<OkResponse> addImg(@RequestBody ImgRequest request) {
         imgService.createImg(request);
@@ -81,6 +85,8 @@ public class ImgController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @SecurityRequirement(name = "Auth")
+    @PreAuthorize("hasAuthority('${app.admin.role}')")
     @PutMapping("/{id}")
     public ResponseEntity<OkResponse> updateImg(@PathVariable Long id, @RequestBody ImgRequest request) {
         imgService.updateImg(id, request);
@@ -96,6 +102,8 @@ public class ImgController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @SecurityRequirement(name = "Auth")
+    @PreAuthorize("hasAuthority('${app.admin.role}')")
     @DeleteMapping("/{id}")
     public ResponseEntity<OkResponse> deleteImg(@PathVariable Long id) {
         imgService.deleteImg(id);
