@@ -1,0 +1,26 @@
+# version: '3'
+
+services:
+  manga-reader:
+    build: .
+    image: manga-reader:0.0.1-SNAPSHOT
+    container_name: manga-reader
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+    - mr_db
+
+  mr_db:
+    image: postgres:16
+    container_name: mr_db
+    ports:
+      - "5433:5432"
+    env_file:
+      - .env
+    environment:  
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
