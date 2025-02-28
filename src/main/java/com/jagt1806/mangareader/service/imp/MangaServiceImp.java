@@ -5,7 +5,7 @@ import com.jagt1806.mangareader.dto.api.attributes.*;
 import com.jagt1806.mangareader.dto.manga.FeedMangaDTO;
 import com.jagt1806.mangareader.dto.manga.MangaDTO;
 import com.jagt1806.mangareader.dto.api.*;
-import com.jagt1806.mangareader.dto.manga.aux.AuxFeedManga;
+import com.jagt1806.mangareader.dto.manga.auxiliary.AuxFeedManga;
 import com.jagt1806.mangareader.http.response.manga.ChapterMangaResponse;
 import com.jagt1806.mangareader.http.response.manga.FeedMangaResponse;
 import com.jagt1806.mangareader.http.response.manga.MangaListResponse;

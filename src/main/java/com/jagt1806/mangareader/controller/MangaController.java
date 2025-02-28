@@ -35,7 +35,7 @@ public class MangaController {
       @RequestParam(required = false, defaultValue = "12") int limit,
       @RequestParam(required = false, defaultValue = "false") boolean nsfw,
       @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
-    MangaListResponse response = mangaService.getMangas(title, offset, limit, nsfw, language);
+    MangaListResponse response = mangaService.getMangas(title, offset, limit, nsfw, language.substring(0, 2).toLowerCase());
     return ResponseEntity.ok(response);
   }
 
@@ -48,7 +48,7 @@ public class MangaController {
   public ResponseEntity<MangaResponse> getMangaById(
       @PathVariable String id,
       @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
-    MangaResponse response = mangaService.getMangaId(id, language);
+    MangaResponse response = mangaService.getMangaId(id, language.substring(0, 2).toLowerCase());
     return ResponseEntity.ok(response);
   }
 
@@ -64,7 +64,7 @@ public class MangaController {
       @RequestParam(required = false, defaultValue = "100") int limit,
       @RequestParam(required = false, defaultValue = "false") boolean nsfw,
       @RequestHeader(value = "Accept-Language", defaultValue = "es") String language) {
-    FeedMangaResponse response = mangaService.getFeed(id, offset, limit, nsfw, language);
+    FeedMangaResponse response = mangaService.getFeed(id, offset, limit, nsfw, language.substring(0, 2).toLowerCase());
     return ResponseEntity.ok(response);
   }
 

@@ -1,6 +1,6 @@
 package com.jagt1806.mangareader.dto.manga;
 
-import com.jagt1806.mangareader.dto.manga.aux.AuxFeedManga;
+import com.jagt1806.mangareader.dto.manga.auxiliary.AuxFeedManga;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
