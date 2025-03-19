@@ -72,7 +72,7 @@ public class MangaServiceImp implements MangaService {
 
         return  new ChapterMangaResponse(
                 buildUrl(baseUrl, hash, attributes.getData(), "data"),
-                buildUrl(baseUrl, hash, attributes.getData(), "data-saver")
+                buildUrl(baseUrl, hash, attributes.getDataSaver(), "data-saver")
         );
     }
 
