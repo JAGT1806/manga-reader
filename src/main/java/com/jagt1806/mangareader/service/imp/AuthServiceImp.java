@@ -62,7 +62,7 @@ public class AuthServiceImp implements AuthService {
         .loadUserByUsername(request.getEmail().toLowerCase());
     String jwt = jwtUtil.generateToken(userDetails);
 
-    return new LoginResponse("Bearer", jwt);
+    return new LoginResponse("Bearer", jwt, userDetails.getId());
   }
 
   @Override
